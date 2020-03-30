@@ -19,8 +19,9 @@ class ChatList extends StatefulWidget {
 }
 
 class _ChatListState extends State<ChatList> {
-  Iterable<Contact> _contacts;
+  Iterable<Contact> _contacts=[];
   HashMap<int, String> usermap;
+  HashMap<String,String> usermap1=new HashMap<String,String>();
   QuerySnapshot users;
   getdata() async {
     QuerySnapshot users =
@@ -30,11 +31,21 @@ class _ChatListState extends State<ChatList> {
 
   HashMap<int, String> createmap() {
     HashMap<int, String> usersmap = new HashMap<int, String>();
+    //HashMap<String,String> usermap1=new HashMap<String,String>();
     for (int i = 0; i < users.documents.length; i++) {
       usersmap[i] = users.documents[i].data['Phone'];
-     // print("aa");
+      //usermap1[users.documents[i].data['Phone']]=users.documents[i].documentID;
     }
     return usersmap;
+  }
+  HashMap<String, String> createmap1() {
+    //HashMap<int, String> usersmap = new HashMap<int, String>();
+    HashMap<String,String> usermap1=new HashMap<String,String>();
+    for (int i = 0; i < users.documents.length; i++) {
+      //usersmap[i] = users.documents[i].data['Phone'];
+      usermap1[users.documents[i].data['Phone']]=users.documents[i].data['userid'];
+    }
+    return usermap1;
   }
 
   @override
@@ -45,6 +56,7 @@ class _ChatListState extends State<ChatList> {
        // print("a");
       });
       usermap = createmap();
+      usermap1=createmap1();
       //print(usermap);
     });
 
@@ -103,7 +115,15 @@ class _ChatListState extends State<ChatList> {
           details: null);
     }
   }
-
+  String convertnum(String numb)
+  {
+     numb=numb.toString().replaceAll(new RegExp(r"\s+\b|\b\s"), "");
+      if(!numb.contains("+961")){
+        numb="+961" + numb;
+      
+  }
+  return numb;
+  }
   @override
   Widget build(BuildContext context) {
     List<Contact> ali=[];
@@ -117,7 +137,7 @@ class _ChatListState extends State<ChatList> {
       if(!numb.contains("+961")){
         numb="+961" + numb;
       }
-      print(numb);
+      //print(numb);
        if (usermap.containsValue(numb)){
                     //print((c.phones?.elementAt(i).toString().trim()));
                     if(!(a.contains(numb))){
@@ -130,6 +150,7 @@ class _ChatListState extends State<ChatList> {
                 
 
     }
+  
     
     return SafeArea(
       child: _contacts != null
@@ -140,8 +161,12 @@ class _ChatListState extends State<ChatList> {
                 
                 return ListTile(
                   onTap: () {
+                    String numb="";
+                    c.phones.map((f) => numb=(f.value.trim())??" ").toList();
+                    numb=convertnum(numb);
+                    //print(usermap1[numb]);
                     Navigator.of(context).push(MaterialPageRoute(
-                        builder: (BuildContext context) =>ChatRoom()));
+                        builder: (BuildContext context) =>ChatRoom(usermap1[numb],c.displayName)));
                   },
                   leading: (c.avatar != null && c.avatar.length > 0)
                       ? CircleAvatar(backgroundImage: MemoryImage(c.avatar))

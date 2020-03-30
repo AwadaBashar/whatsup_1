@@ -1,7 +1,178 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class ChatRoom extends StatelessWidget {
 
+import 'package:whatsup_1/models/messsage.dart';
+import 'package:whatsup_1/resources/firebase_repositry.dart';
+
+import 'models/user.dart';
+class ChatRoom extends StatefulWidget {
+  String id;
+  String na;
+  ChatRoom(String id,String na1)
+  {
+    this.id=id;
+    na=na1;
+    
+  } 
+  @override
+  
+  _ChatRoomState createState() => _ChatRoomState(id,na);
+}
+
+class _ChatRoomState extends State<ChatRoom> {
+ TextEditingController textFieldController = TextEditingController();
+String myid;
+String recid;
+bool isWriting;
+String name;
+
+FirebaseRepository _repository=FirebaseRepository();
+
+  _ChatRoomState(String id,String name1)
+  {
+    recid=id;
+    name=name1;
+  }
+   initState() {setState(() {
+     
+   create ()async{
+     myid=await getid();
+    sender=User(myid);
+    receiver=User(recid);}
+    create();}); 
+     
+    
+
+   
+  }
+Future<String>getid()async{
+   final FirebaseUser user = await FirebaseAuth.instance.currentUser();
+  return user.uid;
+  
+  }
+User sender;
+User receiver;
+sendMessage ()async
+ {
+   
+   var text=textFieldController.text;
+   Message _message=Message(
+     receiverId:recid,
+     senderId:myid,
+     message:text,
+     timestamp:FieldValue.serverTimestamp(),
+     type:'text',
+
+
+   );
+   setState((){
+     isWriting=false;
+     //String myid
+    //print(myid);
+   
+   });
+
+  _repository.addMessageToDb(_message, sender, receiver);
+  
+   
+   
+ }
+ Widget messageList() {
+    return StreamBuilder(
+      stream: Firestore.instance
+          .collection("messages")
+          .document(myid)
+          .collection(recid)
+          .orderBy("timestamp", descending: false)
+          .snapshots(),
+      builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (snapshot.data == null) {
+          return Center(child: CircularProgressIndicator());
+        }
+        return ListView.builder(
+          padding: EdgeInsets.all(10),
+          itemCount: snapshot.data.documents.length,
+          itemBuilder: (context, index) {
+            return chatMessageItem(snapshot.data.documents[index]);
+          },
+        );
+      },
+    );
+  }
+ Widget chatMessageItem(DocumentSnapshot snapshot) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 15),
+      child: Container(
+        alignment: snapshot['senderId'] == myid
+            ? Alignment.centerRight
+            : Alignment.centerLeft,
+        child: snapshot['senderId'] == recid
+            ? senderLayout(snapshot)
+            : receiverLayout(snapshot),
+      ),
+    );
+  }
+   Widget senderLayout(DocumentSnapshot snapshot) {
+    Radius messageRadius = Radius.circular(10);
+
+    return Container(
+      margin: EdgeInsets.only(top: 12),
+      constraints:
+          BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.65),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.only(
+          topLeft: messageRadius,
+          topRight: messageRadius,
+          bottomLeft: messageRadius,
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(10),
+        child: getMessage(snapshot),
+      ),
+    );
+  }
+  getMessage(DocumentSnapshot snapshot) {
+    return Text(
+      snapshot['message'],
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 16.0,
+      ),
+    );
+  }
+  Widget receiverLayout(DocumentSnapshot snapshot) {
+    Radius messageRadius = Radius.circular(10);
+
+    return Container(
+      margin: EdgeInsets.only(top: 12),
+      constraints:
+          BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.65),
+      decoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.only(
+          bottomRight: messageRadius,
+          topRight: messageRadius,
+          bottomLeft: messageRadius,
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(10),
+        child: getMessage(snapshot),
+      ),
+    );
+  }
+
+void chatControls() {
+    setWritingTo(bool val) {
+      setState(() {
+        isWriting = val;
+      });
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,7 +194,7 @@ class ChatRoom extends StatelessWidget {
               Positioned(
                 left: 50 + 2.0 * 2 + 8.0,
                 top: 8.0 + 2.0,
-                child: Text("Name "),
+                child: Text(name),
               ),
             ],
           ),
@@ -36,8 +207,8 @@ class ChatRoom extends StatelessWidget {
       ),
       body: Column(
         children: <Widget>[
-          Expanded(
-            child: ListView(children: <Widget>[Text("Hello!"),Text("How are you"),Text("Whatsapp")],), // chat threads
+          Flexible(
+            child: messageList(),
           ),
           Container(
           color: Colors.white,
@@ -48,6 +219,7 @@ class ChatRoom extends StatelessWidget {
         SizedBox(width: 8.0),
         Expanded(
             child: TextField(
+              controller: textFieldController,
               decoration: InputDecoration(
                 hintText: 'Type a message',
                 border: InputBorder.none,
@@ -60,7 +232,7 @@ class ChatRoom extends StatelessWidget {
         Icon(Icons.camera_alt,
               size: 30.0, color: Theme.of(context).hintColor),
         SizedBox(width: 8.0),
-        Icon(Icons.send,size: 30.0, color: Theme.of(context).hintColor),
+        IconButton(icon: Icon(Icons.send), onPressed:(){sendMessage(); textFieldController.clear();}),
       ],),
           ), 
         ],
