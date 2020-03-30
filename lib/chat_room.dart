@@ -23,6 +23,8 @@ class ChatRoom extends StatefulWidget {
 
 class _ChatRoomState extends State<ChatRoom> {
  TextEditingController textFieldController = TextEditingController();
+ ScrollController _scrollController = new ScrollController();
+ 
 String myid;
 String recid;
 bool isWriting;
@@ -92,6 +94,7 @@ sendMessage ()async
           return Center(child: CircularProgressIndicator());
         }
         return ListView.builder(
+          controller: _scrollController,
           padding: EdgeInsets.all(10),
           itemCount: snapshot.data.documents.length,
           itemBuilder: (context, index) {
@@ -232,7 +235,12 @@ void chatControls() {
         Icon(Icons.camera_alt,
               size: 30.0, color: Theme.of(context).hintColor),
         SizedBox(width: 8.0),
-        IconButton(icon: Icon(Icons.send), onPressed:(){sendMessage(); textFieldController.clear();}),
+        
+        IconButton(icon: Icon(Icons.send), onPressed:(){sendMessage(); textFieldController.clear();_scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            curve: Curves.easeOut,
+            duration: const Duration(milliseconds: 300),
+          ); }),
       ],),
           ), 
         ],

@@ -151,8 +151,10 @@ class LoginScreen extends StatelessWidget {
                           }
                         }
                         if (FirebaseAuth.instance.currentUser() != null && found!=true) {
+                           final FirebaseUser user = await FirebaseAuth.instance.currentUser();
                           Firestore.instance.collection('users').add({
                             'Phone': phone,
+                            'userid':await user.uid
                           }).catchError((e) {
                             print(e);
                           });
