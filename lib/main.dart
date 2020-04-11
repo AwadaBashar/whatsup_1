@@ -9,6 +9,8 @@ import 'dart:io';
 import 'package:path/path.dart' show join;
 import 'package:path_provider/path_provider.dart';
 import 'package:whatsup_1/services/auth.dart';
+import 'package:provider/provider.dart';
+import 'package:whatsup_1/provider/image_upload_provider.dart';
 
 Future<void> main() async
 {
@@ -31,8 +33,8 @@ class Whatsup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamProvider<User>.value(
-      value: AuthService().user,
+    return ChangeNotifierProvider<ImageUploadProvider>(
+      create: (context) => ImageUploadProvider(),
       child:MaterialApp(
           title: 'Whatsup_1',
           theme: ThemeData(

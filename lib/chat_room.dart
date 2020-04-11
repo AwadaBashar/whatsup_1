@@ -1,10 +1,18 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-
+import 'package:flutter/scheduler.dart';
+import 'package:emoji_picker/emoji_picker.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:whatsup_1/models/messsage.dart';
 import 'package:whatsup_1/resources/firebase_repositry.dart';
+import 'package:whatsup_1/utils/utilities.dart';
+import 'package:whatsup_1/provider/image_upload_provider.dart';
+import 'package:whatsup_1/enum/view_state.dart';
+import 'package:whatsup_1/widgets/cached_image.dart';
 
 import 'models/user.dart';
 class ChatRoom extends StatefulWidget {
@@ -22,15 +30,18 @@ class ChatRoom extends StatefulWidget {
 }
 
 class _ChatRoomState extends State<ChatRoom> {
- TextEditingController textFieldController = TextEditingController();
- ScrollController _scrollController = new ScrollController();
- 
+TextEditingController textFieldController = TextEditingController();
 String myid;
 String recid;
-bool isWriting;
+bool isWriting = false;
+bool showEmojiPicker = false;
 String name;
+ScrollController _listScrollController= ScrollController();
 
+FocusNode textFieldFocus = FocusNode();
 FirebaseRepository _repository=FirebaseRepository();
+
+ImageUploadProvider _imageUploadProvider;
 
   _ChatRoomState(String id,String name1)
   {
@@ -49,6 +60,25 @@ FirebaseRepository _repository=FirebaseRepository();
 
    
   }
+
+  showKeyboard() => textFieldFocus.requestFocus();
+
+  hideKeyboard() => textFieldFocus.unfocus();
+
+  hideEmojiContainer() {
+    if (!mounted) return;
+    setState(() {
+      showEmojiPicker = false;
+    });
+  }
+
+  showEmojiContainer() {
+    if (!mounted) return;
+    setState(() {
+      showEmojiPicker = true;
+    });
+  }
+
 Future<String>getid()async{
    final FirebaseUser user = await FirebaseAuth.instance.currentUser();
   return user.uid;
@@ -64,7 +94,7 @@ sendMessage ()async
      receiverId:recid,
      senderId:myid,
      message:text,
-     timestamp:FieldValue.serverTimestamp(),
+     timestamp:Timestamp.now(),
      type:'text',
 
 
@@ -87,16 +117,26 @@ sendMessage ()async
           .collection("messages")
           .document(myid)
           .collection(recid)
-          .orderBy("timestamp", descending: false)
+          .orderBy("timestamp", descending: true)
           .snapshots(),
       builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (snapshot.data == null) {
           return Center(child: CircularProgressIndicator());
         }
+
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+           _listScrollController.animateTo(
+             _listScrollController.position.minScrollExtent,
+             duration: Duration(milliseconds: 250),
+             curve: Curves.easeInOut,
+           );
+         });
+         
         return ListView.builder(
-          controller: _scrollController,
           padding: EdgeInsets.all(10),
           itemCount: snapshot.data.documents.length,
+          reverse: true,
+          controller: _listScrollController,
           itemBuilder: (context, index) {
             return chatMessageItem(snapshot.data.documents[index]);
           },
@@ -104,7 +144,9 @@ sendMessage ()async
       },
     );
   }
+
  Widget chatMessageItem(DocumentSnapshot snapshot) {
+    Message _message = Message.fromMap(snapshot.data);
     return Container(
       margin: EdgeInsets.symmetric(vertical: 15),
       child: Container(
@@ -112,12 +154,12 @@ sendMessage ()async
             ? Alignment.centerRight
             : Alignment.centerLeft,
         child: snapshot['senderId'] == recid
-            ? senderLayout(snapshot)
-            : receiverLayout(snapshot),
+            ? senderLayout(_message)
+            : receiverLayout(_message),
       ),
     );
   }
-   Widget senderLayout(DocumentSnapshot snapshot) {
+   Widget senderLayout(Message message) {
     Radius messageRadius = Radius.circular(10);
 
     return Container(
@@ -134,20 +176,34 @@ sendMessage ()async
       ),
       child: Padding(
         padding: EdgeInsets.all(10),
-        child: getMessage(snapshot),
+        child: getMessage(message),
       ),
     );
   }
-  getMessage(DocumentSnapshot snapshot) {
-    return Text(
-      snapshot['message'],
-      style: TextStyle(
-        color: Colors.white,
-        fontSize: 16.0,
-      ),
-    );
+  getMessage(Message message) {
+   return message.type != "image"
+        ? Text(
+            message.message,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16.0,
+            ),
+          )
+        : message.photoUrl != null
+            ? CachedImage(url: message.photoUrl)
+            : Text("Url was null");
   }
-  Widget receiverLayout(DocumentSnapshot snapshot) {
+
+  void pickImage({@required ImageSource source}) async {
+    File selectedImage = await Utils.pickImage(source: source);
+    _repository.uploadImage(
+        image: selectedImage,
+        receiverId: recid,
+        senderId: myid,
+        imageUploadProvider: _imageUploadProvider);
+  }
+  
+  Widget receiverLayout(Message message) {
     Radius messageRadius = Radius.circular(10);
 
     return Container(
@@ -164,7 +220,7 @@ sendMessage ()async
       ),
       child: Padding(
         padding: EdgeInsets.all(10),
-        child: getMessage(snapshot),
+        child: getMessage(message),
       ),
     );
   }
@@ -176,8 +232,29 @@ void chatControls() {
       });
     }
   }
+
+  emojiContainer() {
+    return EmojiPicker(
+      bgColor: Color(0xff272c35),
+      indicatorColor: Color(0xff2b9ed4),
+      rows: 3,
+      columns: 7,
+      onEmojiSelected: (emoji, category) {
+        if (!mounted) return;
+        setState(() {
+          isWriting = true;
+        });
+
+        textFieldController.text = textFieldController.text + emoji.emoji;
+      },
+      recommendKeywords: ["face", "happy", "party", "sad"],
+      numRecommended: 50,
+    );
+  }
+  
   @override
   Widget build(BuildContext context) {
+    _imageUploadProvider= Provider.of<ImageUploadProvider>(context);
     return Scaffold(
       backgroundColor: Color(0xFFECE5DD),
       appBar: AppBar(
@@ -213,34 +290,56 @@ void chatControls() {
           Flexible(
             child: messageList(),
           ),
+          _imageUploadProvider.getViewState == ViewState.LOADING
+              ? Container(
+                  alignment: Alignment.centerRight,
+                  margin: EdgeInsets.only(right: 15),
+                  child: CircularProgressIndicator(),
+                )
+              : Container(),
+          showEmojiPicker ? Container(child: emojiContainer()) : Container(),
           Container(
           color: Colors.white,
             child: Row(children: <Widget>[
         SizedBox(width: 8.0),
-        Icon(Icons.insert_emoticon,
-              size: 30.0, color: Theme.of(context).hintColor),
+        IconButton(
+          icon: Icon(Icons.insert_emoticon),
+          onPressed: () {
+                    if (!showEmojiPicker) {
+                      // keyboard is visible
+                      hideKeyboard();
+                      showEmojiContainer();
+                    } else {
+                      //keyboard is hidden
+                      showKeyboard();
+                      hideEmojiContainer();
+                    }
+                  },
+              ),
         SizedBox(width: 8.0),
         Expanded(
             child: TextField(
               controller: textFieldController,
+              focusNode: textFieldFocus,
+              onTap: () => hideEmojiContainer(),
               decoration: InputDecoration(
                 hintText: 'Type a message',
                 border: InputBorder.none,
               ),
             ),
         ),
-        Icon(Icons.attach_file,
-              size: 30.0, color: Theme.of(context).hintColor),
+        GestureDetector(
+        onTap: () => pickImage(source: ImageSource.gallery),
+        child:Icon(Icons.attach_file,
+              size: 30.0, color: Theme.of(context).hintColor),),
         SizedBox(width: 8.0),
-        Icon(Icons.camera_alt,
-              size: 30.0, color: Theme.of(context).hintColor),
+        GestureDetector( 
+          onTap: () => pickImage(source: ImageSource.camera),
+          child: Icon(Icons.camera_alt,
+              size: 30.0, color: Theme.of(context).hintColor),),
+
         SizedBox(width: 8.0),
-        
-        IconButton(icon: Icon(Icons.send), onPressed:(){sendMessage(); textFieldController.clear();_scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            curve: Curves.easeOut,
-            duration: const Duration(milliseconds: 300),
-          ); }),
+        IconButton(icon: Icon(Icons.send), onPressed:(){sendMessage(); textFieldController.clear();}),
       ],),
           ), 
         ],
