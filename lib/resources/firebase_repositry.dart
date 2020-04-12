@@ -16,14 +16,20 @@ class FirebaseRepository {
 
 
 
-  Future<void> addMessageToDb(Message message, User sender, User receiver) =>
+  Future<void> addMessageToDb(Message message, User sender, User receiver){
       _firebaseMethods.addMessageToDb(message, sender, receiver);
+      _firebaseMethods.addId(message, sender, receiver);
+  }
+
+  Future<User> getUserDetails() => _firebaseMethods.getUserDetails();
+
 
   Future<String> uploadImageToStorage(File imageFile) =>
       _firebaseMethods.uploadImageToStorage(imageFile);
 
   void uploadImageMsgToDb(String url, String receiverId, String senderId) =>
       _firebaseMethods.setImageMsg(url, receiverId, senderId);
+
   
    void uploadImage({
     @required File image,

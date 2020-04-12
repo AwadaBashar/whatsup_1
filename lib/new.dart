@@ -1,5 +1,5 @@
+import 'package:flutter/material.dart';
 import 'dart:collection';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -13,54 +13,33 @@ import 'chat_room.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/services.dart';
+class AllContacts extends StatefulWidget {
 
-class ChatList extends StatefulWidget {
+
   @override
-  _ChatListState createState() => _ChatListState();
+  _AllContactsState createState() => _AllContactsState();
 }
 
-class _ChatListState extends State<ChatList> {
+class _AllContactsState extends State<AllContacts> {
   Iterable<Contact> _contacts=[];
   HashMap<int, String> usermap;
   HashMap<String,String> usermap1=new HashMap<String,String>();
-  HashMap<String,String> usermap2=new HashMap<String,String>();
   QuerySnapshot users;
   getdata() async {
     QuerySnapshot users =
         await Firestore.instance.collection('users').getDocuments();
     return users;
   }
- HashMap<int, String> buildContactedPeople(String userid,HashMap<String,String> x)
-{
-  
-  HashMap<int, String> usersmap = new HashMap<int, String>();
-  for (int i = 0; i < users.documents.length; i++) {
-    
 
-      if (users.documents[i].data['userid'] == userid)
-      {
-        List<String> names = List.from(users.documents[i].data['talkedwith']);
-        for(int j=0;j<names.length;j++)
-        {
-          
-          usersmap[j] =x[names.elementAt(j)];
-        
-        }
-        return usersmap;
-      }
-     
+  HashMap<int, String> createmap() {
+    HashMap<int, String> usersmap = new HashMap<int, String>();
+    //HashMap<String,String> usermap1=new HashMap<String,String>();
+    for (int i = 0; i < users.documents.length; i++) {
+      usersmap[i] = users.documents[i].data['Phone'];
+      //usermap1[users.documents[i].data['Phone']]=users.documents[i].documentID;
     }
-    
-}
-  // HashMap<int, String> createmap(String x,int lengthTalked) {
-  //   HashMap<int, String> usersmap = new HashMap<int, String>();
-  //   //HashMap<String,String> usermap1=new HashMap<String,String>();
-  //   for (int i = 0; i < users.documents.length; i++) {
-  //     usersmap[i] = users.documents[i].data['Phone'];
-  //     //usermap1[users.documents[i].data['Phone']]=users.documents[i].documentID;
-  //   }
-  //   return usersmap;
-  // }
+    return usersmap;
+  }
   HashMap<String, String> createmap1() {
     //HashMap<int, String> usersmap = new HashMap<int, String>();
     HashMap<String,String> usermap1=new HashMap<String,String>();
@@ -70,36 +49,17 @@ class _ChatListState extends State<ChatList> {
     }
     return usermap1;
   }
-  HashMap<String, String> createmap2() {
-    //HashMap<int, String> usersmap = new HashMap<int, String>();
-    HashMap<String,String> usermap1=new HashMap<String,String>();
-    for (int i = 0; i < users.documents.length; i++) {
-      //usersmap[i] = users.documents[i].data['Phone'];
-      usermap1[users.documents[i].data['userid']]=users.documents[i].data['Phone'];
-    }
-    return usermap1;
-  }
-  Future<String>getid()async{
-   final FirebaseUser user = await FirebaseAuth.instance.currentUser();
-  return user.uid;
-  
-  }
-String myid;
+
   @override
   initState() {
     if (!mounted) return;
     getdata().then((results) {
       setState(() {
-        create ()async{
-     myid=await getid();
-     usermap1=createmap1();
-      usermap2=createmap2();
-      usermap = buildContactedPeople(myid,usermap2);
-    }
-    create();
         users = results;
        // print("a");
       });
+      usermap = createmap();
+      usermap1=createmap1();
       //print(usermap);
     });
 
@@ -194,9 +154,28 @@ String myid;
                 
 
     }
-  
-    
-    return SafeArea(
+    return 
+      MaterialApp(
+          title: 'Whatsup_1',
+          theme: ThemeData(
+            primaryColor: Color(0xff075e54),
+            indicatorColor: Colors.white,
+            primaryColorDark: Color(0xFF128C7E),
+            primaryIconTheme: IconThemeData(
+              color: Colors.white,
+            ),
+            textTheme: TextTheme(
+              title: TextStyle(color: Colors.white),
+            ),
+          ),
+          home:Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Color(0xff075e54),
+          elevation: 0.0,
+          title: Text('Contacts'),
+        ),
+        body:SafeArea(
       child: _contacts != null
           ? ListView.builder(
               itemCount: ali.length,
@@ -222,110 +201,7 @@ String myid;
           : Center(
               child: CircularProgressIndicator(),
             ),
-    );
-  }
+    )
+          ));
+      }
 }
-
-class ContactDetailsPage extends StatelessWidget {
-  ContactDetailsPage(this._contact);
-  final Contact _contact;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_contact.displayName ?? ""),
-        actions: <Widget>[
-//          IconButton(
-//            icon: Icon(Icons.share),
-//            onPressed: () => shareVCFCard(context, contact: _contact),
-//          ),
-          IconButton(
-            icon: Icon(Icons.delete),
-            onPressed: () => ContactsService.deleteContact(_contact),
-          ),
-          IconButton(icon: Icon(Icons.update), onPressed: () {}),
-        ],
-      ),
-      body: SafeArea(
-        child: ListView(
-          children: <Widget>[
-            ListTile(
-              title: Text("Name"),
-              trailing: Text(_contact.givenName ?? ""),
-            ),
-            ListTile(
-              title: Text("Middle name"),
-              trailing: Text(_contact.middleName ?? ""),
-            ),
-            ListTile(
-              title: Text("Family name"),
-              trailing: Text(_contact.familyName ?? ""),
-            ),
-            ListTile(
-              title: Text("Prefix"),
-              trailing: Text(_contact.prefix ?? ""),
-            ),
-            ListTile(
-              title: Text("Suffix"),
-              trailing: Text(_contact.suffix ?? ""),
-            ),
-            ListTile(
-              title: Text("Birthday"),
-              trailing: Text(_contact.birthday != null
-                  ? DateFormat('dd-MM-yyyy').format(_contact.birthday)
-                  : ""),
-            ),
-            ListTile(
-              title: Text("Company"),
-              trailing: Text(_contact.company ?? ""),
-            ),
-            ListTile(
-              title: Text("Job"),
-              trailing: Text(_contact.jobTitle ?? ""),
-            ),
-            ListTile(
-              title: Text("Account Type"),
-              trailing: Text((_contact.androidAccountType != null)
-                  ? _contact.androidAccountType.toString()
-                  : ""),
-            ),
-            //AddressesTile(_contact.postalAddresses),
-            ItemsTile("Phones", _contact.phones),
-            ItemsTile("Emails", _contact.emails)
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class ItemsTile extends StatelessWidget {
-  ItemsTile(this._title, this._items);
-  final Iterable<Item> _items;
-  final String _title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        ListTile(title: Text(_title)),
-        Column(
-          children: _items
-              .map(
-                (i) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: ListTile(
-                    title: Text(i.label ?? ""),
-                    trailing: Text(i.value ?? ""),
-                  ),
-                ),
-              )
-              .toList(),
-        ),
-      ],
-    );
-  }
-}
-

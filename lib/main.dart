@@ -11,7 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:whatsup_1/services/auth.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsup_1/provider/image_upload_provider.dart';
-
+import 'package:whatsup_1/provider/user_provider.dart';
 Future<void> main() async
 {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,8 +33,11 @@ class Whatsup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<ImageUploadProvider>(
-      create: (context) => ImageUploadProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ImageUploadProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+      ],
       child:MaterialApp(
           title: 'Whatsup_1',
           theme: ThemeData(

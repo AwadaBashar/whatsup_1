@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,13 +8,18 @@ import 'package:flutter/scheduler.dart';
 import 'package:emoji_picker/emoji_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:whatsup_1/models/call.dart';
 import 'package:whatsup_1/models/messsage.dart';
+import 'package:whatsup_1/resources/call_methods.dart';
 import 'package:whatsup_1/resources/firebase_repositry.dart';
+import 'package:whatsup_1/screens/callscreens/call_screen.dart';
+import 'package:whatsup_1/screens/callscreens/pickup/pickup_layout.dart';
+import 'package:whatsup_1/utils/permissions.dart';
 import 'package:whatsup_1/utils/utilities.dart';
 import 'package:whatsup_1/provider/image_upload_provider.dart';
 import 'package:whatsup_1/enum/view_state.dart';
 import 'package:whatsup_1/widgets/cached_image.dart';
-
+import 'package:whatsup_1/utils/call_utilities.dart';
 import 'models/user.dart';
 class ChatRoom extends StatefulWidget {
   String id;
@@ -86,6 +92,7 @@ Future<String>getid()async{
   }
 User sender;
 User receiver;
+
 sendMessage ()async
  {
    
@@ -190,7 +197,7 @@ sendMessage ()async
             ),
           )
         : message.photoUrl != null
-            ? CachedImage(url: message.photoUrl)
+            ? CachedImage(message.photoUrl,height: 250,width: 250,radius: 10,)
             : Text("Url was null");
   }
 
@@ -255,94 +262,101 @@ void chatControls() {
   @override
   Widget build(BuildContext context) {
     _imageUploadProvider= Provider.of<ImageUploadProvider>(context);
-    return Scaffold(
-      backgroundColor: Color(0xFFECE5DD),
-      appBar: AppBar(
-        title: SizedBox(
-          width: double.infinity,
-          child: Stack(
-            overflow: Overflow.visible,
-            children: <Widget>[
-              Positioned(
-                //left: ,
-                //top: 0,
-                child: CircleAvatar(
-                  radius: 25,
-                  child: Icon(Icons.person),
+    return PickupLayout(
+          scaffold: Scaffold(
+        backgroundColor: Color(0xFFECE5DD),
+        appBar: AppBar(
+          title: SizedBox(
+            width: double.infinity,
+            child: Stack(
+              overflow: Overflow.visible,
+              children: <Widget>[
+                Positioned(
+                  //left: ,
+                  //top: 0,
+                  child: CircleAvatar(
+                    radius: 25,
+                    child: Icon(Icons.person),
+                  ),
+                ),
+                Positioned(
+                  left: 50 + 2.0 * 2 + 8.0,
+                  top: 8.0 + 2.0,
+                  child: Text(name),
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            IconButton(icon: Icon(Icons.call), onPressed: () {}),
+            IconButton(icon: Icon(Icons.video_call), onPressed: () async => await Permissions.cameraAndMicrophonePermissionsGranted()? CallUtils.dial(
+              from:sender ,
+              to: receiver,
+              context: context
+            ): {},
+            ),
+            IconButton(icon: Icon(Icons.more_vert), onPressed: () {}),
+          ],
+        ),
+        body: Column(
+          children: <Widget>[
+            Flexible(
+              child: messageList(),
+            ),
+            _imageUploadProvider.getViewState == ViewState.LOADING
+                ? Container(
+                    alignment: Alignment.centerRight,
+                    margin: EdgeInsets.only(right: 15),
+                    child: CircularProgressIndicator(),
+                  )
+                : Container(),
+            showEmojiPicker ? Container(child: emojiContainer()) : Container(),
+            Container(
+            color: Colors.white,
+              child: Row(children: <Widget>[
+          SizedBox(width: 8.0),
+          IconButton(
+            icon: Icon(Icons.insert_emoticon),
+            onPressed: () {
+                      if (!showEmojiPicker) {
+                        // keyboard is visible
+                        hideKeyboard();
+                        showEmojiContainer();
+                      } else {
+                        //keyboard is hidden
+                        showKeyboard();
+                        hideEmojiContainer();
+                      }
+                    },
+                ),
+          SizedBox(width: 8.0),
+          Expanded(
+              child: TextField(
+                controller: textFieldController,
+                focusNode: textFieldFocus,
+                onTap: () => hideEmojiContainer(),
+                decoration: InputDecoration(
+                  hintText: 'Type a message',
+                  border: InputBorder.none,
                 ),
               ),
-              Positioned(
-                left: 50 + 2.0 * 2 + 8.0,
-                top: 8.0 + 2.0,
-                child: Text(name),
-              ),
-            ],
           ),
-        ),
-        actions: <Widget>[
-          IconButton(icon: Icon(Icons.call), onPressed: () {}),
-          IconButton(icon: Icon(Icons.video_call), onPressed: () {}),
-          IconButton(icon: Icon(Icons.more_vert), onPressed: () {}),
-        ],
-      ),
-      body: Column(
-        children: <Widget>[
-          Flexible(
-            child: messageList(),
-          ),
-          _imageUploadProvider.getViewState == ViewState.LOADING
-              ? Container(
-                  alignment: Alignment.centerRight,
-                  margin: EdgeInsets.only(right: 15),
-                  child: CircularProgressIndicator(),
-                )
-              : Container(),
-          showEmojiPicker ? Container(child: emojiContainer()) : Container(),
-          Container(
-          color: Colors.white,
-            child: Row(children: <Widget>[
-        SizedBox(width: 8.0),
-        IconButton(
-          icon: Icon(Icons.insert_emoticon),
-          onPressed: () {
-                    if (!showEmojiPicker) {
-                      // keyboard is visible
-                      hideKeyboard();
-                      showEmojiContainer();
-                    } else {
-                      //keyboard is hidden
-                      showKeyboard();
-                      hideEmojiContainer();
-                    }
-                  },
-              ),
-        SizedBox(width: 8.0),
-        Expanded(
-            child: TextField(
-              controller: textFieldController,
-              focusNode: textFieldFocus,
-              onTap: () => hideEmojiContainer(),
-              decoration: InputDecoration(
-                hintText: 'Type a message',
-                border: InputBorder.none,
-              ),
-            ),
-        ),
-        GestureDetector(
-        onTap: () => pickImage(source: ImageSource.gallery),
-        child:Icon(Icons.attach_file,
-              size: 30.0, color: Theme.of(context).hintColor),),
-        SizedBox(width: 8.0),
-        GestureDetector( 
-          onTap: () => pickImage(source: ImageSource.camera),
-          child: Icon(Icons.camera_alt,
-              size: 30.0, color: Theme.of(context).hintColor),),
+          GestureDetector(
+          onTap: () => pickImage(source: ImageSource.gallery),
+          child:Icon(Icons.attach_file,
+                size: 30.0, color: Theme.of(context).hintColor),),
+          SizedBox(width: 8.0),
+          GestureDetector( 
+            onTap: () => pickImage(source: ImageSource.camera),
+            child: Icon(Icons.camera_alt,
+                size: 30.0, color: Theme.of(context).hintColor),),
 
-        SizedBox(width: 8.0),
-        IconButton(icon: Icon(Icons.send), onPressed:(){sendMessage(); textFieldController.clear();}),
-      ],),
-          ), 
-        ],
+          SizedBox(width: 8.0),
+          IconButton(icon: Icon(Icons.send), onPressed:(){sendMessage(); textFieldController.clear();}),
+        ],),
+            ), 
+          ],
+        ),
       ),
     );
   }

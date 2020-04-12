@@ -1,19 +1,42 @@
 import 'package:camera/camera.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsup_1/services/auth.dart';
 import '../../chat_list.dart';
 import 'package:camera/camera.dart';
 import 'dart:async';
 import 'dart:io';
-
+import '../../new.dart';
+import '../../profile.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' show join;
 import 'package:path_provider/path_provider.dart';
+import 'package:whatsup_1/provider/user_provider.dart';
+import 'package:whatsup_1/screens/callscreens/pickup/pickup_layout.dart';
 
-class Home extends StatelessWidget {
+class Home extends StatefulWidget {
+  
+  @override
+  _HomeState createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
   final AuthService _auth = AuthService();
+
+  UserProvider userProvider;
+
+   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      userProvider = Provider.of<UserProvider>(context, listen: false);
+      userProvider.refreshUser();
+    });
+  }
   final _tabs = <Widget>[
     Tab(icon: Icon(Icons.camera_alt)),
     Tab(text: 'CHATS'),
@@ -21,52 +44,66 @@ class Home extends StatelessWidget {
     Tab(text: 'CALLS'),
   ];
 
-  // Home(CameraDescription firstCamera)
-  // {
-  //   this.firstCamera=firstCamera;
-  // }
-
-  // CameraDescription firstCamera;
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: _tabs.length,
-      initialIndex: 1,
-      child: Scaffold(
-        // top app bar
-        appBar: AppBar(
-          title: Text('Whatsup'),
-          actions: <Widget>[
-            IconButton(icon: Icon(Icons.search), onPressed: () {}),
-            // IconButton(icon: Icon(Icons.more_vert), onPressed: () {}),
-            PopupMenuButton<String>(
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                      PopupMenuItem<String>(
-                        value: 'signout',
-                        child: Text('SignOut'),
-                      )
-                    ],
-                onSelected: (value) async {
-                  if (value == 'signout') {
-                    await _auth.signOut();
-                  }
-                })
-          ],
-          bottom: TabBar(tabs: _tabs),
+    return PickupLayout(
+          scaffold: DefaultTabController(
+        length: _tabs.length,
+        initialIndex: 1,
+        child: Scaffold(
+          // top app bar
+          appBar: AppBar(
+            title: Text('Whatsup'),
+            actions: <Widget>[
+              IconButton(icon: Icon(Icons.search), onPressed: () {}),
+              // IconButton(icon: Icon(Icons.more_vert), onPressed: () {}),
+              PopupMenuButton<String>(
+                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                        PopupMenuItem<String>(
+                          value: 'signout',
+                          child: Text('SignOut'),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'Add profile and status',
+                          child: Text('My Profile and Status'),
+                        )
+                      ],
+                  onSelected: (value) async {
+                    if (value == 'signout') {
+                      await _auth.signOut();
+                    }
+                    else if (value=='Add profile and status')
+                    {
+                      Navigator.push(context,
+                                MaterialPageRoute(builder: (context) => MyApp()));
+                    }
+                  })
+            ],
+            bottom: TabBar(tabs: _tabs),
+          ),
+
+          // body (tab views)
+          body: TabBarView(
+            children: <Widget>[
+              TakePictureScreen(
+                // Pass the appropriate camera to the TakePictureScreen widget.
+                camera: null,
+              ),
+              //Text('camera'),
+              ChatList(),
+              Text('status'),
+              Text('calls'),
+            ],
+          ),
+          floatingActionButton:FloatingActionButton(
+          onPressed: () {
+            Navigator.of(context).push(MaterialPageRoute(
+                          builder: (BuildContext context) =>AllContacts()));
+          },
+          child: Icon(Icons.message),
+          backgroundColor: Colors.green,
         ),
 
-        // body (tab views)
-        body: TabBarView(
-          children: <Widget>[
-            TakePictureScreen(
-              // Pass the appropriate camera to the TakePictureScreen widget.
-              camera: null,
-            ),
-            //Text('camera'),
-            ChatList(),
-            Text('status'),
-            Text('calls'),
-          ],
         ),
       ),
     );
