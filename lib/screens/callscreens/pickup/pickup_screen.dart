@@ -15,7 +15,7 @@ class PickupScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Scaffold(  
       body: Container(
         alignment: Alignment.center,
         padding: EdgeInsets.symmetric(vertical: 100),

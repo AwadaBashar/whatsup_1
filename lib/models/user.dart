@@ -8,7 +8,7 @@ class User {
 
   Map toMap(User user) {
     var data = Map<String, dynamic>();
-    data['uid'] = user.uid;
+    data['userid'] = user.uid;
     data['name'] = user.uid;
   
     //data["profile_photo"] = user.profilePhoto;
@@ -17,8 +17,9 @@ class User {
 
   // Named constructor
   User.fromMap(Map<String, dynamic> mapData) {
-    this.uid = mapData['uid'];
-    this.name = mapData['name'];
+    this.uid = mapData['userid'];
+    this.name = mapData['userid'];
+    
     //this.profilePhoto = mapData['profile_photo'];
   }
 

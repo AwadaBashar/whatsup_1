@@ -93,6 +93,34 @@ Future<String>getid()async{
 User sender;
 User receiver;
 
+static final CallMethods callMethods = CallMethods();
+
+  dial({context}) async {
+    Call call = Call(
+      callerId: myid,
+      callerName: myid,
+      callerPic: "https://firebasestorage.googleapis.com/v0/b/whatsup-5827e.appspot.com/o/appstore.png?alt=media&token=104752d6-b1f0-442b-a02c-0d4f82a6cf30",
+      //from.profilePhoto,
+      receiverId:recid,
+      receiverName: recid,
+      receiverPic: "https://firebasestorage.googleapis.com/v0/b/whatsup-5827e.appspot.com/o/appstore.png?alt=media&token=104752d6-b1f0-442b-a02c-0d4f82a6cf30",
+      // to.profilePhoto,
+      channelId: Random().nextInt(1000).toString(),
+    );
+
+    bool callMade = await callMethods.makeCall(call: call);
+
+    call.hasDialled = true;
+
+    if (callMade) {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CallScreen(call: call),
+          ));
+    }
+  }
+
 sendMessage ()async
  {
    
@@ -289,9 +317,7 @@ void chatControls() {
           ),
           actions: <Widget>[
             IconButton(icon: Icon(Icons.call), onPressed: () {}),
-            IconButton(icon: Icon(Icons.video_call), onPressed: () async => await Permissions.cameraAndMicrophonePermissionsGranted()? CallUtils.dial(
-              from:sender ,
-              to: receiver,
+            IconButton(icon: Icon(Icons.video_call), onPressed: () async => await Permissions.cameraAndMicrophonePermissionsGranted()? dial(
               context: context
             ): {},
             ),

@@ -12,6 +12,7 @@ import 'package:whatsup_1/provider/image_upload_provider.dart';
 
 class FirebaseMethods {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  
   StorageReference _storageReference;
   static final CollectionReference _userCollection =
       _firestore.collection("users");
@@ -19,10 +20,11 @@ class FirebaseMethods {
   static final Firestore _firestore = Firestore.instance;
   
   Future<FirebaseUser> getCurrentUser() async {
-    FirebaseUser currentUser;
-    currentUser = await _auth.currentUser();
-    return currentUser;
+    final FirebaseUser user = await FirebaseAuth.instance.currentUser();
+    return user;
   }
+
+
    Future<void> addId(
       Message message, User sender, User receiver) async {
         await Firestore().collection('users').document(message.receiverId).updateData({'talkedwith': FieldValue.arrayUnion([message.senderId])});
