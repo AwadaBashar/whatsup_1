@@ -2,11 +2,13 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:contacts_service/contacts_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:emoji_picker/emoji_picker.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsup_1/models/call.dart';
 import 'package:whatsup_1/models/messsage.dart';
@@ -24,15 +26,18 @@ import 'models/user.dart';
 class ChatRoom extends StatefulWidget {
   String id;
   String na;
-  ChatRoom(String id,String na1)
+  String profile;
+  Contact c;
+  ChatRoom(String id,String na1,String pro,Contact x)
   {
     this.id=id;
     na=na1;
-    
+    profile=pro;
+    c=x;
   } 
   @override
   
-  _ChatRoomState createState() => _ChatRoomState(id,na);
+  _ChatRoomState createState() => _ChatRoomState(id,na,profile,c);
 }
 
 class _ChatRoomState extends State<ChatRoom> {
@@ -46,13 +51,16 @@ ScrollController _listScrollController= ScrollController();
 
 FocusNode textFieldFocus = FocusNode();
 FirebaseRepository _repository=FirebaseRepository();
-
+String profile;
 ImageUploadProvider _imageUploadProvider;
+Contact c;
 
-  _ChatRoomState(String id,String name1)
+  _ChatRoomState(String id,String name1,pro,Contact x)
   {
     recid=id;
     name=name1;
+    profile=pro;
+    c=x;
   }
    initState() {setState(() {
      
@@ -304,13 +312,17 @@ void chatControls() {
                   //top: 0,
                   child: CircleAvatar(
                     radius: 25,
-                    child: Icon(Icons.person),
+                    backgroundImage: NetworkImage(profile)
                   ),
                 ),
                 Positioned(
                   left: 50 + 2.0 * 2 + 8.0,
                   top: 8.0 + 2.0,
-                  child: Text(name),
+                  child: GestureDetector( child:Text(name),onTap: (){
+                     Navigator.of(context).push(MaterialPageRoute(
+                        builder: (BuildContext context) =>ContactDetailsPage(c)));
+                  },),
+                  
                 ),
               ],
             ),
@@ -384,6 +396,108 @@ void chatControls() {
           ],
         ),
       ),
+    );
+  }
+}
+class ContactDetailsPage extends StatelessWidget {
+  ContactDetailsPage(this._contact);
+  final Contact _contact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_contact.displayName ?? ""),
+        actions: <Widget>[
+//          IconButton(
+//            icon: Icon(Icons.share),
+//            onPressed: () => shareVCFCard(context, contact: _contact),
+//          ),
+          IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: () => ContactsService.deleteContact(_contact),
+          ),
+          IconButton(icon: Icon(Icons.update), onPressed: () {}),
+        ],
+      ),
+      body: SafeArea(
+        child: ListView(
+          children: <Widget>[
+            ListTile(
+              title: Text("Name"),
+              trailing: Text(_contact.givenName ?? ""),
+            ),
+            ListTile(
+              title: Text("Middle name"),
+              trailing: Text(_contact.middleName ?? ""),
+            ),
+            ListTile(
+              title: Text("Family name"),
+              trailing: Text(_contact.familyName ?? ""),
+            ),
+            ListTile(
+              title: Text("Prefix"),
+              trailing: Text(_contact.prefix ?? ""),
+            ),
+            ListTile(
+              title: Text("Suffix"),
+              trailing: Text(_contact.suffix ?? ""),
+            ),
+            ListTile(
+              title: Text("Birthday"),
+              trailing: Text(_contact.birthday != null
+                  ? DateFormat('dd-MM-yyyy').format(_contact.birthday)
+                  : ""),
+            ),
+            ListTile(
+              title: Text("Company"),
+              trailing: Text(_contact.company ?? ""),
+            ),
+            ListTile(
+              title: Text("Job"),
+              trailing: Text(_contact.jobTitle ?? ""),
+            ),
+            ListTile(
+              title: Text("Account Type"),
+              trailing: Text((_contact.androidAccountType != null)
+                  ? _contact.androidAccountType.toString()
+                  : ""),
+            ),
+            //AddressesTile(_contact.postalAddresses),
+            ItemsTile("Phones", _contact.phones),
+            ItemsTile("Emails", _contact.emails)
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ItemsTile extends StatelessWidget {
+  ItemsTile(this._title, this._items);
+  final Iterable<Item> _items;
+  final String _title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        ListTile(title: Text(_title)),
+        Column(
+          children: _items
+              .map(
+                (i) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: ListTile(
+                    title: Text(i.label ?? ""),
+                    trailing: Text(i.value ?? ""),
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+      ],
     );
   }
 }

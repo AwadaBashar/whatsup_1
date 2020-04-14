@@ -261,7 +261,7 @@ HashMap<String, String> ids=new HashMap<String,String>();
                     //print();
                     //print(usermap1[numb]);
                     Navigator.of(context).push(MaterialPageRoute(
-                        builder: (BuildContext context) =>ChatRoom(usermap1[numb],c.displayName)));
+                        builder: (BuildContext context) =>ChatRoom(usermap1[numb],c.displayName,ids1[numb],c)));
                   },
                   leading: (c.avatar != null && c.avatar.length > 0)
                       ? CircleAvatar(backgroundImage: MemoryImage(c.avatar))

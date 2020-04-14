@@ -25,6 +25,7 @@ class _ChatListState extends State<ChatList> {
   HashMap<String,String> usermap1=new HashMap<String,String>();
   HashMap<String,String> usermap2=new HashMap<String,String>();
   QuerySnapshot users;
+  
   getdata() async {
     QuerySnapshot users =
         await Firestore.instance.collection('users').getDocuments();
@@ -52,6 +53,19 @@ class _ChatListState extends State<ChatList> {
     }
     
 }
+   get2()async{
+HashMap<String,String> ids=new HashMap<String,String>();
+      for (int i = 0; i < users.documents.length; i++) {
+        String fileName=users.documents[i].data['profile'];
+   
+  ids[users.documents[i].data['Phone']]=fileName;
+
+        
+        
+        }
+    //ids["+96170286007"]="https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1000&q=80";
+        return ids;
+  }
   // HashMap<int, String> createmap(String x,int lengthTalked) {
   //   HashMap<int, String> usersmap = new HashMap<int, String>();
   //   //HashMap<String,String> usermap1=new HashMap<String,String>();
@@ -85,21 +99,31 @@ class _ChatListState extends State<ChatList> {
   
   }
 String myid;
+HashMap<String,String> urls=new HashMap<String,String>();
   @override
   initState() {
     if (!mounted) return;
-    getdata().then((results) {
-      setState(() {
+    getdata().then((results){
+      setState(() async{
+        users = results;
         create ()async{
      myid=await getid();
      usermap1=createmap1();
       usermap2=createmap2();
       usermap = buildContactedPeople(myid,usermap2);
     }
-    create();
-        users = results;
+    
+        
        // print("a");
+         create2()async{
+         urls=await get2();}
+      await create();
+      await create2();
       });
+     
+      
+      
+    
       //print(usermap);
     });
 
@@ -172,6 +196,7 @@ String myid;
   Widget build(BuildContext context) {
     List<Contact> ali=[];
     List a=[];
+    HashMap<String,String> urls1=new HashMap<String,String>();
     for(int i=0;i<_contacts.length;i++)
     {
       var numb;
@@ -194,7 +219,8 @@ String myid;
                 
 
     }
-  
+  urls1=urls;
+  print(urls1);
     
     return SafeArea(
       child: _contacts != null
@@ -202,7 +228,9 @@ String myid;
               itemCount: ali.length,
               itemBuilder: (BuildContext context, int index) {
                 Contact c = ali?.elementAt(index);
-                
+                 String numb="";
+                    c.phones.map((f) => numb=(f.value.trim())??" ").toList();
+                    numb=convertnum(numb);
                 return ListTile(
                   onTap: () {
                     String numb="";
@@ -210,11 +238,12 @@ String myid;
                     numb=convertnum(numb);
                     //print(usermap1[numb]);
                     Navigator.of(context).push(MaterialPageRoute(
-                        builder: (BuildContext context) =>ChatRoom(usermap1[numb],c.displayName)));
+                        builder: (BuildContext context) =>ChatRoom(usermap1[numb],c.displayName,urls1[numb],c)));
                   },
                   leading: (c.avatar != null && c.avatar.length > 0)
                       ? CircleAvatar(backgroundImage: MemoryImage(c.avatar))
-                      : CircleAvatar(child: Text(c.initials())),
+                      : CircleAvatar(backgroundImage: NetworkImage(urls1[numb])),
+              
                   title: Text(c.displayName ?? ""),
                 );
               },
