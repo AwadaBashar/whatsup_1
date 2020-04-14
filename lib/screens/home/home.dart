@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
@@ -25,9 +26,9 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final AuthService _auth = AuthService();
-
+  String url;
   UserProvider userProvider;
-
+ 
    @override
   void initState() {
     // TODO: implement initState
@@ -46,6 +47,15 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    Future geturl()async{
+      final FirebaseUser user = await FirebaseAuth.instance.currentUser();
+      String myid=await user.uid;
+      String fileName=myid;
+       var ref = FirebaseStorage.instance.ref().child(fileName);
+      var downloadUrl = await ref.getDownloadURL();
+      setState((){url=downloadUrl;});
+    }
+    
     return PickupLayout(
           scaffold: DefaultTabController(
         length: _tabs.length,
@@ -74,8 +84,9 @@ class _HomeState extends State<Home> {
                     }
                     else if (value=='Add profile and status')
                     {
+                      await geturl();
                       Navigator.push(context,
-                                MaterialPageRoute(builder: (context) => MyApp()));
+                                MaterialPageRoute(builder: (context) => MyApp(url)));
                     }
                   })
             ],
@@ -96,9 +107,10 @@ class _HomeState extends State<Home> {
             ],
           ),
           floatingActionButton:FloatingActionButton(
-          onPressed: () {
+          onPressed: () async{
+            await geturl();
             Navigator.of(context).push(MaterialPageRoute(
-                          builder: (BuildContext context) =>AllContacts()));
+                          builder: (BuildContext context) =>AllContacts(url)));
           },
           child: Icon(Icons.message),
           backgroundColor: Colors.green,

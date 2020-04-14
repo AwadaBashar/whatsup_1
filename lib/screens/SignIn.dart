@@ -154,8 +154,11 @@ class LoginScreen extends StatelessWidget {
                            final FirebaseUser user = await FirebaseAuth.instance.currentUser();
                           Firestore.instance.collection('users').document(user.uid).setData({
                             'Phone': phone,
+                            'status':'hello',
                             'userid':await user.uid,
-                            'talkedwith':[]
+                            'talkedwith':[],
+                            'username':' ',
+                            'profile': 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=600&q=60'
                           }).catchError((e) {
                             print(e);
                           });

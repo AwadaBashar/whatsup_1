@@ -1,3 +1,4 @@
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'dart:collection';
 import 'package:flutter/material.dart';
@@ -14,24 +15,38 @@ import 'package:contacts_service/contacts_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/services.dart';
 class AllContacts extends StatefulWidget {
+  String x;
+  AllContacts(String url)
+  {
+    x=url;
+  }
+
 
 
   @override
-  _AllContactsState createState() => _AllContactsState();
+  _AllContactsState createState() => _AllContactsState(x);
 }
+ 
 
 class _AllContactsState extends State<AllContacts> {
   Iterable<Contact> _contacts=[];
   HashMap<int, String> usermap;
   HashMap<String,String> usermap1=new HashMap<String,String>();
+  HashMap<String,String> ids=new HashMap<String,String>();
+  HashMap<String, String> statuses=new HashMap<String,String>();
   QuerySnapshot users;
+String url;
+  _AllContactsState(String x)
+  {
+    url=x;
+  }
   getdata() async {
     QuerySnapshot users =
         await Firestore.instance.collection('users').getDocuments();
     return users;
   }
 
-  HashMap<int, String> createmap() {
+  createmap() {
     HashMap<int, String> usersmap = new HashMap<int, String>();
     //HashMap<String,String> usermap1=new HashMap<String,String>();
     for (int i = 0; i < users.documents.length; i++) {
@@ -49,19 +64,58 @@ class _AllContactsState extends State<AllContacts> {
     }
     return usermap1;
   }
+  get2()async{
+HashMap<String, String> ids=new HashMap<String,String>();
+      for (int i = 0; i < users.documents.length; i++) {
+        String fileName=users.documents[i].data['status'];
+   
+  ids[users.documents[i].data['Phone']]=fileName;
 
+        
+        
+        }
+    //ids["+96170286007"]="https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1000&q=80";
+        return ids;
+  }
+   get1()async{
+HashMap<String, String> ids=new HashMap<String,String>();
+      for (int i = 0; i < users.documents.length; i++) {
+        String fileName=users.documents[i].data['profile'];
+   
+  ids[users.documents[i].data['Phone']]=fileName;
+
+        
+        
+        }
+    //ids["+96170286007"]="https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1000&q=80";
+        return ids;
+  }
   @override
   initState() {
     if (!mounted) return;
     getdata().then((results) {
-      setState(() {
+      setState(() async{
+        
         users = results;
+        usermap = createmap();
+      usermap1=createmap1();
+      create() async{
+     ids=await  get1();
+    
+      }
+      create2()async{
+        statuses=await get2();
+      }
+      
+    await create();
+    await create2();
+      //print(usermap);
+      //print(ids);
        // print("a");
       });
-      usermap = createmap();
-      usermap1=createmap1();
-      //print(usermap);
-    });
+       
+      });
+    
 
     super.initState();
     refreshContacts();
@@ -126,12 +180,17 @@ class _AllContactsState extends State<AllContacts> {
         numb="+961" + numb;
       
   }
+  print(numb);
   return numb;
   }
   @override
   Widget build(BuildContext context) {
     List<Contact> ali=[];
     List a=[];
+    HashMap<String, String> ids1;
+    HashMap<String, String> statuses1;
+    bool app=true;
+    
     for(int i=0;i<_contacts.length;i++)
     {
       var numb;
@@ -143,17 +202,25 @@ class _AllContactsState extends State<AllContacts> {
       }
       //print(numb);
        if (usermap.containsValue(numb)){
-                    //print((c.phones?.elementAt(i).toString().trim()));
+                    
                     if(!(a.contains(numb))){
                     ali.add(_contacts.elementAt(i));
                     a.add(numb);
                     }
                    
-                    // break;
+                    
                   }
-                
+              
 
     }
+    ids1=ids;
+    statuses1=statuses;
+   
+    
+    //print(ids1);
+  
+   
+    
     return 
       MaterialApp(
           title: 'Whatsup_1',
@@ -179,22 +246,29 @@ class _AllContactsState extends State<AllContacts> {
       child: _contacts != null
           ? ListView.builder(
               itemCount: ali.length,
-              itemBuilder: (BuildContext context, int index) {
+              itemBuilder: (BuildContext context, int index)  {
                 Contact c = ali?.elementAt(index);
+                String numb="";
+                c.phones.map((f) => numb=(f.value.trim())??" ").toList();
+                 numb=convertnum(numb);
                 
                 return ListTile(
                   onTap: () {
-                    String numb="";
-                    c.phones.map((f) => numb=(f.value.trim())??" ").toList();
+                    
+                    
                     numb=convertnum(numb);
+                    convertnum(numb);
+                    //print();
                     //print(usermap1[numb]);
                     Navigator.of(context).push(MaterialPageRoute(
                         builder: (BuildContext context) =>ChatRoom(usermap1[numb],c.displayName)));
                   },
                   leading: (c.avatar != null && c.avatar.length > 0)
                       ? CircleAvatar(backgroundImage: MemoryImage(c.avatar))
-                      : CircleAvatar(child: Text(c.initials())),
-                  title: Text(c.displayName ?? ""),
+                      : CircleAvatar(backgroundImage:NetworkImage(ids1[numb])),
+                  isThreeLine: true,
+                  title: Text(c.displayName ?? ""), subtitle: Text(statuses1[numb]),
+                  
                 );
               },
             )
