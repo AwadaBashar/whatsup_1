@@ -6,6 +6,7 @@
 <uses-permission android:name="android.permission.CAMERA" />
 <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+<uses-permission android:name="android.permission.INTERNET"/>
 
 <!-- The Agora SDK requires Bluetooth permissions in case users are using Bluetooth devices.-->
 <uses-permission android:name="android.permission.BLUETOOTH" />
@@ -18,7 +19,7 @@
 <uses-permission android:name="android.permission.WRITE_CONTACTS" />
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="whatsup_1"
+        android:label="whatsup"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

@@ -147,6 +147,12 @@ class LoginScreen extends StatelessWidget {
                         for (int i = 0; i < users.documents.length; i++) {
                           if (users.documents[i].data['Phone'] == phone) {
                             found = true;
+                            final FirebaseUser user = await FirebaseAuth.instance.currentUser();
+                               Firestore.instance.collection('users').document(user.uid).updateData({
+                            'online':true
+                          }).catchError((e) {
+                            print(e);
+                          });
                             break;
                           }
                         }
@@ -154,17 +160,19 @@ class LoginScreen extends StatelessWidget {
                            final FirebaseUser user = await FirebaseAuth.instance.currentUser();
                           Firestore.instance.collection('users').document(user.uid).setData({
                             'Phone': phone,
-                            'status':'hello',
+                            'status':"Hey there ,I'm using whatsup",
                             'userid':await user.uid,
                             'talkedwith':[],
-                            'username':' ',
-                            'profile': 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=600&q=60'
+                            'username':'ali',
+                            'profile':"https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1000&q=80"
                           }).catchError((e) {
                             print(e);
                           });
                         } else {
+
                           print('You need to be logged in');
                         }
+                        
                         Navigator.pop(context);
                       },
                       color: Color(0xff075e54),

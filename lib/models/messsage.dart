@@ -7,8 +7,9 @@ class Message {
   String message;
   Timestamp timestamp;
   String photoUrl;
+  String seen;
 
-  Message({this.senderId, this.receiverId, this.type, this.message, this.timestamp});
+  Message({this.senderId, this.receiverId, this.type, this.message, this.timestamp,this.seen});
 
   //Will be only called when you wish to send an image
   Message.imageMessage({this.senderId, this.receiverId, this.message, this.type, this.timestamp, this.photoUrl});
@@ -20,6 +21,7 @@ class Message {
     map['type'] = this.type;
     map['message'] = this.message;
     map['timestamp'] = this.timestamp;
+    map['seen']=this.seen;
     return map;
   }
 
@@ -41,6 +43,7 @@ class Message {
     this.message = map['message'];
     this.timestamp = map['timestamp'];
     this.photoUrl = map['photoUrl'];
+    this.seen=map['seen'];
   }
 
 

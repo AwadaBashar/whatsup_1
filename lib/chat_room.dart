@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:collection';
 import 'dart:io';
 import 'dart:math';
 
@@ -28,16 +30,18 @@ class ChatRoom extends StatefulWidget {
   String na;
   String profile;
   Contact c;
-  ChatRoom(String id,String na1,String pro,Contact x)
+  bool onl;
+  ChatRoom(String id,String na1,String pro,Contact x, bool userstatu)
   {
     this.id=id;
     na=na1;
     profile=pro;
     c=x;
+    onl=userstatu;
   } 
   @override
   
-  _ChatRoomState createState() => _ChatRoomState(id,na,profile,c);
+  _ChatRoomState createState() => _ChatRoomState(id,na,profile,c,(onl!=true)?"offline":"online");
 }
 
 class _ChatRoomState extends State<ChatRoom> {
@@ -48,31 +52,118 @@ bool isWriting = false;
 bool showEmojiPicker = false;
 String name;
 ScrollController _listScrollController= ScrollController();
-
+ QuerySnapshot users;
+QuerySnapshot messages;
 FocusNode textFieldFocus = FocusNode();
 FirebaseRepository _repository=FirebaseRepository();
 String profile;
 ImageUploadProvider _imageUploadProvider;
 Contact c;
+String online;
+HashMap<String,bool> usermap1=new HashMap<String,bool>();
+HashMap<String,String> usermap2=new HashMap<String,String>();
+getdata() async {
+    QuerySnapshot users =
+        await Firestore.instance.collection('users').getDocuments();
+    return users;
+  }
+ 
+   getmess2() async {
+     final FirebaseUser user = await FirebaseAuth.instance.currentUser();
+    QuerySnapshot users =
+        await Firestore()
+        .collection("messages")
+        .document(recid)
+        .collection(await user.uid).getDocuments();
+    return users;
+  }
+    HashMap<String, bool> createmap3() {
+    //HashMap<int, String> usersmap = new HashMap<int, String>();
+    HashMap<String,bool> usermap1=new HashMap<String,bool>();
+    for (int i = 0; i < users.documents.length; i++) {
+      //usersmap[i] = users.documents[i].data['Phone'];
+      usermap1[users.documents[i].data['userid']]=users.documents[i].data['online'];
+    }
+    return usermap1;
+  }
+  Future<void> setseen()
 
-  _ChatRoomState(String id,String name1,pro,Contact x)
+async {
+  final FirebaseUser user = await FirebaseAuth.instance.currentUser();
+for (int i = 0; i < messages.documents.length; i++)
+{
+  await Firestore()
+        .collection("messages")
+        .document(recid)
+        .collection(await user.uid).document(messages.documents[i].documentID).updateData({
+                            'seen':"yes"
+                          }).catchError((e) {
+                            print(e);
+                          });
+  
+}
+}  
+HashMap<String, String> createmap4() {
+    //HashMap<int, String> usersmap = new HashMap<int, String>();
+    HashMap<String,String> usermap1=new HashMap<String,String>();
+    for (int i = 0; i < users.documents.length; i++) {
+      //usersmap[i] = users.documents[i].data['Phone'];
+      usermap1[users.documents[i].data['userid']]=users.documents[i].data['lastSeen'];
+    }
+    return usermap1;
+  }
+
+  _ChatRoomState(String id,String name1,pro,Contact x, String onl)
   {
+   online=onl;
     recid=id;
     name=name1;
     profile=pro;
     c=x;
   }
-   initState() {setState(() {
-     
+  Timer timer;
+  Timer timer2;
+  bool seen;
+  @override
+   void initState() {
+      const one=const Duration(seconds: 1);
+    timer= Timer.periodic(one,(Timer t)=>getdata().then((results){
+      
+
+     setState(() {
+      
+
+     users=results;
+     usermap1=createmap3();
+     usermap2=createmap4();
    create ()async{
      myid=await getid();
     sender=User(myid);
+    
     receiver=User(recid);}
-    create();}); 
-     
+    create();
+    }); 
+     }));
+      timer2= Timer.periodic(one,(Timer t)=>getmess2().then((results){
+      
+
+     setState(() {
+      
+
+     messages=results;
+     setseen();
+    }); 
+     }));
+
     
 
    
+  }
+  @override
+  void dispose(){
+    timer?.cancel();
+    timer2?.cancel();
+    super.dispose();
   }
 
   showKeyboard() => textFieldFocus.requestFocus();
@@ -139,6 +230,7 @@ sendMessage ()async
      message:text,
      timestamp:Timestamp.now(),
      type:'text',
+     seen:"not"
 
 
    );
@@ -189,6 +281,8 @@ sendMessage ()async
   }
 
  Widget chatMessageItem(DocumentSnapshot snapshot) {
+   bool seen1;
+   seen1=(snapshot['seen']=="yes")?true:false;
     Message _message = Message.fromMap(snapshot.data);
     return Container(
       margin: EdgeInsets.symmetric(vertical: 15),
@@ -198,7 +292,7 @@ sendMessage ()async
             : Alignment.centerLeft,
         child: snapshot['senderId'] == recid
             ? senderLayout(_message)
-            : receiverLayout(_message),
+            : receiverLayout(_message,seen1),
       ),
     );
   }
@@ -212,7 +306,7 @@ sendMessage ()async
       decoration: BoxDecoration(
         color: Colors.black,
         borderRadius: BorderRadius.only(
-          topLeft: messageRadius,
+          bottomRight: messageRadius,
           topRight: messageRadius,
           bottomLeft: messageRadius,
         ),
@@ -236,6 +330,19 @@ sendMessage ()async
             ? CachedImage(message.photoUrl,height: 250,width: 250,radius: 10,)
             : Text("Url was null");
   }
+  getMessage1(Message message,seen2) {
+   return message.type != "image"
+        ? Text(
+            message.message,
+            style: TextStyle(
+              color:(seen2!=true)? Colors.black:Colors.blue,
+              fontSize: 16.0,
+            ),
+          )
+        : message.photoUrl != null
+            ? CachedImage(message.photoUrl,height: 250,width: 250,radius: 10,)
+            : Text("Url was null");
+  }
 
   void pickImage({@required ImageSource source}) async {
     File selectedImage = await Utils.pickImage(source: source);
@@ -246,7 +353,7 @@ sendMessage ()async
         imageUploadProvider: _imageUploadProvider);
   }
   
-  Widget receiverLayout(Message message) {
+  Widget receiverLayout(Message message,bool seen1) {
     Radius messageRadius = Radius.circular(10);
 
     return Container(
@@ -254,16 +361,16 @@ sendMessage ()async
       constraints:
           BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.65),
       decoration: BoxDecoration(
-        color: Colors.black26,
+        color: Colors.white,
         borderRadius: BorderRadius.only(
           bottomRight: messageRadius,
-          topRight: messageRadius,
+          topLeft: messageRadius,
           bottomLeft: messageRadius,
         ),
       ),
       child: Padding(
         padding: EdgeInsets.all(10),
-        child: getMessage(message),
+        child: getMessage1(message,seen1),
       ),
     );
   }
@@ -298,44 +405,43 @@ void chatControls() {
   @override
   Widget build(BuildContext context) {
     _imageUploadProvider= Provider.of<ImageUploadProvider>(context);
-    return PickupLayout(
+    return Container(
+      decoration: BoxDecoration(image:DecorationImage(image: AssetImage("images/images.jpg"),fit:BoxFit.cover)),
+      child:PickupLayout(
+
           scaffold: Scaffold(
-        backgroundColor: Color(0xFFECE5DD),
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: SizedBox(
-            width: double.infinity,
-            child: Stack(
-              overflow: Overflow.visible,
-              children: <Widget>[
-                Positioned(
-                  //left: ,
-                  //top: 0,
-                  child: CircleAvatar(
-                    radius: 25,
-                    backgroundImage: NetworkImage(profile)
-                  ),
-                ),
-                Positioned(
-                  left: 50 + 2.0 * 2 + 8.0,
-                  top: 8.0 + 2.0,
-                  child: GestureDetector( child:Text(name),onTap: (){
+      
+            titleSpacing: -30.0,
+            automaticallyImplyLeading: true,
+            title: ListTile(
+              onTap: (){
                      Navigator.of(context).push(MaterialPageRoute(
                         builder: (BuildContext context) =>ContactDetailsPage(c)));
-                  },),
-                  
-                ),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            IconButton(icon: Icon(Icons.call), onPressed: () {}),
+                  },
+              leading:CircleAvatar(
+                    radius: 20,
+                    backgroundImage: NetworkImage(profile)
+                  ),
+              
+             title:Text(name,style:TextStyle(fontSize: 16,color:Colors.white),),
+             subtitle:Text(
+      
+      (usermap1[recid].toString()=="true")?"online":"Last Seen at "+usermap2[recid].toString(),style:TextStyle(fontSize: 10,color:Colors.white))
+               
+                ), 
+                actions:<Widget>[
+            
             IconButton(icon: Icon(Icons.video_call), onPressed: () async => await Permissions.cameraAndMicrophonePermissionsGranted()? dial(
               context: context
             ): {},
             ),
             IconButton(icon: Icon(Icons.more_vert), onPressed: () {}),
-          ],
-        ),
+          ],  
+            ),
+        
+    
         body: Column(
           children: <Widget>[
             Flexible(
@@ -396,7 +502,7 @@ void chatControls() {
           ],
         ),
       ),
-    );
+    ),);
   }
 }
 class ContactDetailsPage extends StatelessWidget {

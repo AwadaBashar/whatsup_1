@@ -19,11 +19,12 @@ class ChatList extends StatefulWidget {
   _ChatListState createState() => _ChatListState();
 }
 
-class _ChatListState extends State<ChatList> {
+class _ChatListState extends State<ChatList> with WidgetsBindingObserver {
   Iterable<Contact> _contacts=[];
   HashMap<int, String> usermap;
   HashMap<String,String> usermap1=new HashMap<String,String>();
   HashMap<String,String> usermap2=new HashMap<String,String>();
+  HashMap<String,bool> userstatus=new HashMap<String,bool>();
   QuerySnapshot users;
   
   getdata() async {
@@ -84,6 +85,15 @@ HashMap<String,String> ids=new HashMap<String,String>();
     }
     return usermap1;
   }
+  HashMap<String, bool> createmap3() {
+    //HashMap<int, String> usersmap = new HashMap<int, String>();
+    HashMap<String,bool> usermap1=new HashMap<String,bool>();
+    for (int i = 0; i < users.documents.length; i++) {
+      //usersmap[i] = users.documents[i].data['Phone'];
+      usermap1[users.documents[i].data['Phone']]=users.documents[i].data['online'];
+    }
+    return usermap1;
+  }
   HashMap<String, String> createmap2() {
     //HashMap<int, String> usersmap = new HashMap<int, String>();
     HashMap<String,String> usermap1=new HashMap<String,String>();
@@ -111,6 +121,7 @@ HashMap<String,String> urls=new HashMap<String,String>();
      usermap1=createmap1();
       usermap2=createmap2();
       usermap = buildContactedPeople(myid,usermap2);
+      userstatus=createmap3();
     }
     
         
@@ -128,6 +139,8 @@ HashMap<String,String> urls=new HashMap<String,String>();
     });
 
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    didChangeAccessibilityFeatures();
     refreshContacts();
   }
 
@@ -144,15 +157,32 @@ HashMap<String,String> urls=new HashMap<String,String>();
       _handleInvalidPermissions(permissionStatus);
     }
   }
+  @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    final FirebaseUser user = await FirebaseAuth.instance.currentUser();
+    if (state == AppLifecycleState.resumed){
+      print("xxxx");
+      Firestore.instance.collection('users').document(user.uid).updateData({
+                            'online':true
+                          }).catchError((e) {
+                            print(e);
+                          });
 
-  updateContact() async {
-    Contact ninja = _contacts
-        .toList()
-        .firstWhere((contact) => contact.familyName.startsWith("Ninja"));
-    ninja.avatar = null;
-    await ContactsService.updateContact(ninja);
+    }
+      
+    else
+     {
+       print("yyyy");
+       String x=DateFormat('MM-dd – kk:mm').format(DateTime.now());
+        Firestore.instance.collection('users').document(user.uid).updateData({
+                            'online':false,
+                            'lastSeen':x
+                          }).catchError((e) {
+                            print(e);
+                          });
 
-    refreshContacts();
+
+     }
   }
 
   Future<PermissionStatus> _getContactPermission() async {
@@ -232,13 +262,14 @@ HashMap<String,String> urls=new HashMap<String,String>();
                     c.phones.map((f) => numb=(f.value.trim())??" ").toList();
                     numb=convertnum(numb);
                 return ListTile(
-                  onTap: () {
+                  onTap: () async{
                     String numb="";
                     c.phones.map((f) => numb=(f.value.trim())??" ").toList();
                     numb=convertnum(numb);
                     //print(usermap1[numb]);
+
                     Navigator.of(context).push(MaterialPageRoute(
-                        builder: (BuildContext context) =>ChatRoom(usermap1[numb],c.displayName,urls1[numb],c)));
+                        builder: (BuildContext context) =>ChatRoom(usermap1[numb],c.displayName,urls1[numb],c,userstatus[numb])));
                   },
                   leading: (c.avatar != null && c.avatar.length > 0)
                       ? CircleAvatar(backgroundImage: MemoryImage(c.avatar))

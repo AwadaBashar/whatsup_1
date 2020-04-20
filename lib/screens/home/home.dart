@@ -28,7 +28,7 @@ class _HomeState extends State<Home> {
   final AuthService _auth = AuthService();
   String url;
   UserProvider userProvider;
- 
+
    @override
   void initState() {
     // TODO: implement initState
