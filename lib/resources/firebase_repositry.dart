@@ -38,4 +38,49 @@ class FirebaseRepository {
     @required ImageUploadProvider imageUploadProvider
   }) =>
       _firebaseMethods.uploadImage(image, receiverId, senderId, imageUploadProvider);
+
+  Future<String> uploadVideoToStorage(File videoFile) =>
+      _firebaseMethods.uploadVideoToStorage(videoFile);
+
+  void uploadVideoMsgToDb(String url, String receiverId, String senderId) =>
+      _firebaseMethods.setVideoMsg(url, receiverId, senderId);
+
+  
+   void uploadVideo({
+    @required File video,
+    @required String receiverId,
+    @required String senderId,
+    @required ImageUploadProvider imageUploadProvider
+  }) =>
+      _firebaseMethods.uploadVideo(video, receiverId, senderId, imageUploadProvider);
+
+  Future<String> uploadAudioToStorage(String audioFile) =>
+      _firebaseMethods.uploadAudioToStorage(audioFile);
+
+  void uploadAudioMsgToDb(String url, String receiverId, String senderId) =>
+      _firebaseMethods.setAudioMsg(url, receiverId, senderId);
+
+  
+   void uploadAudio({
+    @required String audio,
+    @required String receiverId,
+    @required String senderId,
+    @required ImageUploadProvider imageUploadProvider
+  }) =>
+      _firebaseMethods.uploadAudio(audio, receiverId, senderId, imageUploadProvider);
+
+  Future<String> uploadDocToStorage(String docFile) =>
+      _firebaseMethods.uploadDocToStorage(docFile);
+
+  void uploadDocMsgToDb(String url, String receiverId, String senderId) =>
+      _firebaseMethods.setDocMsg(url, receiverId, senderId);
+
+  
+   void uploadDoc({
+    @required String audio,
+    @required String receiverId,
+    @required String senderId,
+    @required ImageUploadProvider imageUploadProvider
+  }) =>
+      _firebaseMethods.uploadDoc(audio, receiverId, senderId, imageUploadProvider);
 }
