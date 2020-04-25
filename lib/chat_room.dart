@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:io';
 import 'dart:math';
-
+import 'dart:io' as io;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,147 +19,211 @@ import 'package:whatsup_1/screens/callscreens/call_screen.dart';
 import 'package:whatsup_1/screens/callscreens/pickup/pickup_layout.dart';
 import 'package:whatsup_1/utils/permissions.dart';
 import 'package:whatsup_1/utils/utilities.dart';
+import 'package:audioplayer/audioplayer.dart';
 import 'package:whatsup_1/provider/image_upload_provider.dart';
 import 'package:whatsup_1/enum/view_state.dart';
 import 'package:whatsup_1/widgets/cached_image.dart';
 import 'package:whatsup_1/utils/call_utilities.dart';
 import 'models/user.dart';
+import 'package:file/file.dart';
+import 'package:file/local.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
+
 class ChatRoom extends StatefulWidget {
   String id;
   String na;
   String profile;
   Contact c;
   bool onl;
-  ChatRoom(String id,String na1,String pro,Contact x, bool userstatu)
-  {
-    this.id=id;
-    na=na1;
-    profile=pro;
-    c=x;
-    onl=userstatu;
-  } 
+  ChatRoom(String id, String na1, String pro, Contact x, bool userstatu) {
+    this.id = id;
+    na = na1;
+    profile = pro;
+    c = x;
+    onl = userstatu;
+  }
   @override
-  
-  _ChatRoomState createState() => _ChatRoomState(id,na,profile,c,(onl!=true)?"offline":"online");
+  _ChatRoomState createState() =>
+      _ChatRoomState(id, na, profile, c, (onl != true) ? "offline" : "online");
 }
 
 class _ChatRoomState extends State<ChatRoom> {
-TextEditingController textFieldController = TextEditingController();
-String myid;
-String recid;
-bool isWriting = false;
-bool showEmojiPicker = false;
-String name;
-ScrollController _listScrollController= ScrollController();
- QuerySnapshot users;
-QuerySnapshot messages;
-FocusNode textFieldFocus = FocusNode();
-FirebaseRepository _repository=FirebaseRepository();
-String profile;
-ImageUploadProvider _imageUploadProvider;
-Contact c;
-String online;
-HashMap<String,bool> usermap1=new HashMap<String,bool>();
-HashMap<String,String> usermap2=new HashMap<String,String>();
-getdata() async {
+  TextEditingController textFieldController = TextEditingController();
+  String myid;
+  String recid;
+  bool isWriting = false;
+  bool showEmojiPicker = false;
+  String name;
+  ScrollController _listScrollController = ScrollController();
+  QuerySnapshot users;
+  QuerySnapshot messages;
+  FocusNode textFieldFocus = FocusNode();
+  FirebaseRepository _repository = FirebaseRepository();
+  String profile;
+  ImageUploadProvider _imageUploadProvider;
+  Contact c;
+  String online;
+  HashMap<String, bool> usermap1 = new HashMap<String, bool>();
+  HashMap<String, String> usermap2 = new HashMap<String, String>();
+  FlutterAudioRecorder _recorder;
+  Recording _recording;
+  Timer _t;
+
+  Future _init() async {
+    var hasPermission = await FlutterAudioRecorder.hasPermissions;
+    if (hasPermission) {
+      String customPath = '/flutter_audio_recorder_';
+      io.Directory appDocDirectory;
+      if (io.Platform.isIOS) {
+        appDocDirectory = await getApplicationDocumentsDirectory();
+      } else {
+        appDocDirectory = await getExternalStorageDirectory();
+      }
+
+      // can add extension like ".mp4" ".wav" ".m4a" ".aac"
+      customPath = appDocDirectory.path +
+          customPath +
+          DateTime.now().millisecondsSinceEpoch.toString();
+
+      // .wav <---> AudioFormat.WAV
+      // .mp4 .m4a .aac <---> AudioFormat.AAC
+      // AudioFormat is optional, if given value, will overwrite path extension when there is conflicts.
+
+      _recorder = FlutterAudioRecorder(customPath,
+          audioFormat: AudioFormat.AAC, sampleRate: 22050);
+      await _recorder.initialized;
+    }
+  }
+
+  Future _prepare() async {
+    await _init();
+    var result = await _recorder.current();
+    setState(() {
+      _recording = result;
+    });
+  }
+
+  Future _startRecording() async {
+    await _recorder.start();
+    var current = await _recorder.current();
+    setState(() {
+      _recording = current;
+    });
+
+    _t = Timer.periodic(Duration(milliseconds: 10), (Timer t) async {
+      var current = await _recorder.current();
+      setState(() {
+        _recording = current;
+        _t = t;
+      });
+    });
+  }
+
+  Future _stopRecording() async {
+    var result = await _recorder.stop();
+    //result.path;
+    _t.cancel();
+
+    setState(() {
+      _recording = result;
+    });
+  }
+
+  getdata() async {
     QuerySnapshot users =
         await Firestore.instance.collection('users').getDocuments();
     return users;
   }
- 
-   getmess2() async {
-     final FirebaseUser user = await FirebaseAuth.instance.currentUser();
-    QuerySnapshot users =
-        await Firestore()
+
+  getmess2() async {
+    final FirebaseUser user = await FirebaseAuth.instance.currentUser();
+    QuerySnapshot users = await Firestore()
         .collection("messages")
         .document(recid)
-        .collection(await user.uid).getDocuments();
+        .collection(await user.uid)
+        .getDocuments();
     return users;
   }
-    HashMap<String, bool> createmap3() {
-    //HashMap<int, String> usersmap = new HashMap<int, String>();
-    HashMap<String,bool> usermap1=new HashMap<String,bool>();
-    for (int i = 0; i < users.documents.length; i++) {
-      //usersmap[i] = users.documents[i].data['Phone'];
-      usermap1[users.documents[i].data['userid']]=users.documents[i].data['online'];
-    }
-    return usermap1;
-  }
-  Future<void> setseen()
 
-async {
-  final FirebaseUser user = await FirebaseAuth.instance.currentUser();
-for (int i = 0; i < messages.documents.length; i++)
-{
-  await Firestore()
-        .collection("messages")
-        .document(recid)
-        .collection(await user.uid).document(messages.documents[i].documentID).updateData({
-                            'seen':"yes"
-                          }).catchError((e) {
-                            print(e);
-                          });
-  
-}
-}  
-HashMap<String, String> createmap4() {
+  HashMap<String, bool> createmap3() {
     //HashMap<int, String> usersmap = new HashMap<int, String>();
-    HashMap<String,String> usermap1=new HashMap<String,String>();
+    HashMap<String, bool> usermap1 = new HashMap<String, bool>();
     for (int i = 0; i < users.documents.length; i++) {
       //usersmap[i] = users.documents[i].data['Phone'];
-      usermap1[users.documents[i].data['userid']]=users.documents[i].data['lastSeen'];
+      usermap1[users.documents[i].data['userid']] =
+          users.documents[i].data['online'];
     }
     return usermap1;
   }
 
-  _ChatRoomState(String id,String name1,pro,Contact x, String onl)
-  {
-   online=onl;
-    recid=id;
-    name=name1;
-    profile=pro;
-    c=x;
+  Future<void> setseen() async {
+    final FirebaseUser user = await FirebaseAuth.instance.currentUser();
+    for (int i = 0; i < messages.documents.length; i++) {
+      await Firestore()
+          .collection("messages")
+          .document(recid)
+          .collection(await user.uid)
+          .document(messages.documents[i].documentID)
+          .updateData({'seen': "yes"}).catchError((e) {
+        print(e);
+      });
+    }
+  }
+
+  HashMap<String, String> createmap4() {
+    //HashMap<int, String> usersmap = new HashMap<int, String>();
+    HashMap<String, String> usermap1 = new HashMap<String, String>();
+    for (int i = 0; i < users.documents.length; i++) {
+      //usersmap[i] = users.documents[i].data['Phone'];
+      usermap1[users.documents[i].data['userid']] =
+          users.documents[i].data['lastSeen'];
+    }
+    return usermap1;
+  }
+
+  _ChatRoomState(String id, String name1, pro, Contact x, String onl) {
+    online = onl;
+    recid = id;
+    name = name1;
+    profile = pro;
+    c = x;
   }
   Timer timer;
   Timer timer2;
   bool seen;
   @override
-   void initState() {
-      const one=const Duration(seconds: 1);
-    timer= Timer.periodic(one,(Timer t)=>getdata().then((results){
-      
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      _prepare();
+    });
+    const one = const Duration(seconds: 60);
+    getdata().then((results) {
+      setState(() {
+        users = results;
+        usermap1 = createmap3();
+        usermap2 = createmap4();
+        create() async {
+          myid = await getid();
+          sender = User(myid);
 
-     setState(() {
-      
+          receiver = User(recid);
+        }
 
-     users=results;
-     usermap1=createmap3();
-     usermap2=createmap4();
-   create ()async{
-     myid=await getid();
-    sender=User(myid);
-    
-    receiver=User(recid);}
-    create();
-    }); 
-     }));
-      timer2= Timer.periodic(one,(Timer t)=>getmess2().then((results){
-      
-
-     setState(() {
-      
-
-     messages=results;
-     setseen();
-    }); 
-     }));
-
-    
-
-   
+        create();
+      });
+    });
+    getmess2().then((results) {
+      setState(() {
+        messages = results;
+        setseen();
+      });
+    });
   }
+
   @override
-  void dispose(){
+  void dispose() {
     timer?.cancel();
     timer2?.cancel();
     super.dispose();
@@ -184,25 +247,27 @@ HashMap<String, String> createmap4() {
     });
   }
 
-Future<String>getid()async{
-   final FirebaseUser user = await FirebaseAuth.instance.currentUser();
-  return user.uid;
-  
+  Future<String> getid() async {
+    final FirebaseUser user = await FirebaseAuth.instance.currentUser();
+    return user.uid;
   }
-User sender;
-User receiver;
 
-static final CallMethods callMethods = CallMethods();
+  User sender;
+  User receiver;
+
+  static final CallMethods callMethods = CallMethods();
 
   dial({context}) async {
     Call call = Call(
       callerId: myid,
       callerName: myid,
-      callerPic: "https://firebasestorage.googleapis.com/v0/b/whatsup-5827e.appspot.com/o/appstore.png?alt=media&token=104752d6-b1f0-442b-a02c-0d4f82a6cf30",
+      callerPic:
+          "https://firebasestorage.googleapis.com/v0/b/whatsup-5827e.appspot.com/o/appstore.png?alt=media&token=104752d6-b1f0-442b-a02c-0d4f82a6cf30",
       //from.profilePhoto,
-      receiverId:recid,
+      receiverId: recid,
       receiverName: recid,
-      receiverPic: "https://firebasestorage.googleapis.com/v0/b/whatsup-5827e.appspot.com/o/appstore.png?alt=media&token=104752d6-b1f0-442b-a02c-0d4f82a6cf30",
+      receiverPic:
+          "https://firebasestorage.googleapis.com/v0/b/whatsup-5827e.appspot.com/o/appstore.png?alt=media&token=104752d6-b1f0-442b-a02c-0d4f82a6cf30",
       // to.profilePhoto,
       channelId: Random().nextInt(1000).toString(),
     );
@@ -220,33 +285,25 @@ static final CallMethods callMethods = CallMethods();
     }
   }
 
-sendMessage ()async
- {
-   
-   var text=textFieldController.text;
-   Message _message=Message(
-     receiverId:recid,
-     senderId:myid,
-     message:text,
-     timestamp:Timestamp.now(),
-     type:'text',
-     seen:"not"
+  sendMessage() async {
+    var text = textFieldController.text;
+    Message _message = Message(
+        receiverId: recid,
+        senderId: myid,
+        message: text,
+        timestamp: Timestamp.now(),
+        type: 'text',
+        seen: "not");
+    setState(() {
+      isWriting = false;
+      //String myid
+      //print(myid);
+    });
 
+    _repository.addMessageToDb(_message, sender, receiver);
+  }
 
-   );
-   setState((){
-     isWriting=false;
-     //String myid
-    //print(myid);
-   
-   });
-
-  _repository.addMessageToDb(_message, sender, receiver);
-  
-   
-   
- }
- Widget messageList() {
+  Widget messageList() {
     return StreamBuilder(
       stream: Firestore.instance
           .collection("messages")
@@ -260,13 +317,13 @@ sendMessage ()async
         }
 
         SchedulerBinding.instance.addPostFrameCallback((_) {
-           _listScrollController.animateTo(
-             _listScrollController.position.minScrollExtent,
-             duration: Duration(milliseconds: 250),
-             curve: Curves.easeInOut,
-           );
-         });
-         
+          _listScrollController.animateTo(
+            _listScrollController.position.minScrollExtent,
+            duration: Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+          );
+        });
+
         return ListView.builder(
           padding: EdgeInsets.all(10),
           itemCount: snapshot.data.documents.length,
@@ -280,9 +337,9 @@ sendMessage ()async
     );
   }
 
- Widget chatMessageItem(DocumentSnapshot snapshot) {
-   bool seen1;
-   seen1=(snapshot['seen']=="yes")?true:false;
+  Widget chatMessageItem(DocumentSnapshot snapshot) {
+    bool seen1;
+    seen1 = (snapshot['seen'] == "yes") ? true : false;
     Message _message = Message.fromMap(snapshot.data);
     return Container(
       margin: EdgeInsets.symmetric(vertical: 15),
@@ -292,11 +349,12 @@ sendMessage ()async
             : Alignment.centerLeft,
         child: snapshot['senderId'] == recid
             ? senderLayout(_message)
-            : receiverLayout(_message,seen1),
+            : receiverLayout(_message, seen1),
       ),
     );
   }
-   Widget senderLayout(Message message) {
+
+  Widget senderLayout(Message message) {
     Radius messageRadius = Radius.circular(10);
 
     return Container(
@@ -317,8 +375,9 @@ sendMessage ()async
       ),
     );
   }
+
   getMessage(Message message) {
-   return message.type != "image"
+    return message.type == "text"
         ? Text(
             message.message,
             style: TextStyle(
@@ -326,34 +385,60 @@ sendMessage ()async
               fontSize: 16.0,
             ),
           )
-        : message.photoUrl != null
-            ? CachedImage(message.photoUrl,height: 250,width: 250,radius: 10,)
-            : Text("Url was null");
+        :(message.type=="image")?( message.photoUrl != null
+            ? CachedImage(
+                message.photoUrl,
+                height: 250,
+                width: 250,
+                radius: 10,
+              )
+            : Text("Url was null")):IconButton(icon: Icon(Icons.play_arrow), onPressed: (){
+              AudioPlayer b=new AudioPlayer();
+              b.play(message.path,isLocal: false);
+            });
   }
-  getMessage1(Message message,seen2) {
-   return message.type != "image"
+
+  getMessage1(Message message, seen2) {
+    return message.type == "text"
         ? Text(
             message.message,
             style: TextStyle(
-              color:(seen2!=true)? Colors.black:Colors.blue,
+              color: (seen2 != true) ? Colors.black : Colors.blue,
               fontSize: 16.0,
             ),
           )
-        : message.photoUrl != null
-            ? CachedImage(message.photoUrl,height: 250,width: 250,radius: 10,)
-            : Text("Url was null");
+        : (message.type=="image")?( message.photoUrl != null
+            ? CachedImage(
+                message.photoUrl,
+                height: 250,
+                width: 250,
+                radius: 10,
+              )
+            : Text("Url was null")):IconButton(icon: Icon(Icons.play_arrow), onPressed: (){
+              AudioPlayer b=new AudioPlayer();
+              b.play(message.path,isLocal: false);
+            });
   }
 
   void pickImage({@required ImageSource source}) async {
-    File selectedImage = await Utils.pickImage(source: source);
+    io.File selectedImage = await Utils.pickImage(source: source);
     _repository.uploadImage(
         image: selectedImage,
         receiverId: recid,
         senderId: myid,
         imageUploadProvider: _imageUploadProvider);
   }
-  
-  Widget receiverLayout(Message message,bool seen1) {
+
+  void pickAudio({@required String filepath}) async {
+    String selectedImage = filepath;
+    _repository.uploadAudio(
+        audio: selectedImage,
+        receiverId: recid,
+        senderId: myid,
+        imageUploadProvider: _imageUploadProvider);
+  }
+
+  Widget receiverLayout(Message message, bool seen1) {
     Radius messageRadius = Radius.circular(10);
 
     return Container(
@@ -370,12 +455,12 @@ sendMessage ()async
       ),
       child: Padding(
         padding: EdgeInsets.all(10),
-        child: getMessage1(message,seen1),
+        child: getMessage1(message, seen1),
       ),
     );
   }
 
-void chatControls() {
+  void chatControls() {
     setWritingTo(bool val) {
       setState(() {
         isWriting = val;
@@ -401,110 +486,143 @@ void chatControls() {
       numRecommended: 50,
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
-    _imageUploadProvider= Provider.of<ImageUploadProvider>(context);
+    _imageUploadProvider = Provider.of<ImageUploadProvider>(context);
     return Container(
-      decoration: BoxDecoration(image:DecorationImage(image: AssetImage("images/images.jpg"),fit:BoxFit.cover)),
-      child:PickupLayout(
-
-          scaffold: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-      
+      decoration: BoxDecoration(
+          image: DecorationImage(
+              image: AssetImage("images/images.jpg"), fit: BoxFit.cover)),
+      child: PickupLayout(
+        scaffold: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
             titleSpacing: -30.0,
             automaticallyImplyLeading: true,
             title: ListTile(
-              onTap: (){
-                     Navigator.of(context).push(MaterialPageRoute(
-                        builder: (BuildContext context) =>ContactDetailsPage(c)));
-                  },
-              leading:CircleAvatar(
-                    radius: 20,
-                    backgroundImage: NetworkImage(profile)
-                  ),
-              
-             title:Text(name,style:TextStyle(fontSize: 16,color:Colors.white),),
-             subtitle:Text(
-      
-      (usermap1[recid].toString()=="true")?"online":"Last Seen at "+usermap2[recid].toString(),style:TextStyle(fontSize: 10,color:Colors.white))
-               
-                ), 
-                actions:<Widget>[
-            
-            IconButton(icon: Icon(Icons.video_call), onPressed: () async => await Permissions.cameraAndMicrophonePermissionsGranted()? dial(
-              context: context
-            ): {},
-            ),
-            IconButton(icon: Icon(Icons.more_vert), onPressed: () {}),
-          ],  
-            ),
-        
-    
-        body: Column(
-          children: <Widget>[
-            Flexible(
-              child: messageList(),
-            ),
-            _imageUploadProvider.getViewState == ViewState.LOADING
-                ? Container(
-                    alignment: Alignment.centerRight,
-                    margin: EdgeInsets.only(right: 15),
-                    child: CircularProgressIndicator(),
-                  )
-                : Container(),
-            showEmojiPicker ? Container(child: emojiContainer()) : Container(),
-            Container(
-            color: Colors.white,
-              child: Row(children: <Widget>[
-          SizedBox(width: 8.0),
-          IconButton(
-            icon: Icon(Icons.insert_emoticon),
-            onPressed: () {
-                      if (!showEmojiPicker) {
-                        // keyboard is visible
-                        hideKeyboard();
-                        showEmojiContainer();
-                      } else {
-                        //keyboard is hidden
-                        showKeyboard();
-                        hideEmojiContainer();
-                      }
-                    },
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (BuildContext context) =>
+                          ContactDetailsPage(c)));
+                },
+                leading: CircleAvatar(
+                    radius: 20, backgroundImage: NetworkImage(profile)),
+                title: Text(
+                  name,
+                  style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
-          SizedBox(width: 8.0),
-          Expanded(
-              child: TextField(
-                controller: textFieldController,
-                focusNode: textFieldFocus,
-                onTap: () => hideEmojiContainer(),
-                decoration: InputDecoration(
-                  hintText: 'Type a message',
-                  border: InputBorder.none,
+                subtitle: Text(
+                    (usermap1[recid].toString() == "true")
+                        ? "online"
+                        : "Last Seen at " + usermap2[recid].toString(),
+                    style: TextStyle(fontSize: 10, color: Colors.white))),
+            actions: <Widget>[
+              IconButton(
+                icon: Icon(Icons.video_call),
+                onPressed: () async =>
+                    await Permissions.cameraAndMicrophonePermissionsGranted()
+                        ? dial(context: context)
+                        : {},
+              ),
+              IconButton(icon: Icon(Icons.more_vert), onPressed: () {}),
+            ],
+          ),
+          body: Column(
+            children: <Widget>[
+              Flexible(
+                child: messageList(),
+              ),
+              _imageUploadProvider.getViewState == ViewState.LOADING
+                  ? Container(
+                      alignment: Alignment.centerRight,
+                      margin: EdgeInsets.only(right: 15),
+                      child: CircularProgressIndicator(),
+                    )
+                  : Container(),
+              showEmojiPicker
+                  ? Container(child: emojiContainer())
+                  : Container(),
+              Container(
+                color: Colors.white,
+                child: Row(
+                  children: <Widget>[
+                    SizedBox(width: 8.0),
+                    IconButton(
+                      icon: Icon(Icons.insert_emoticon),
+                      onPressed: () {
+                        if (!showEmojiPicker) {
+                          // keyboard is visible
+                          hideKeyboard();
+                          showEmojiContainer();
+                        } else {
+                          //keyboard is hidden
+                          showKeyboard();
+                          hideEmojiContainer();
+                        }
+                      },
+                    ),
+                    SizedBox(width: 8.0),
+                    Expanded(
+                      child: TextField(
+                        controller: textFieldController,
+                        focusNode: textFieldFocus,
+                        onTap: () => hideEmojiContainer(),
+                        decoration: InputDecoration(
+                          hintText: 'Type a message',
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                        icon: Icon(Icons.mic),
+                        onPressed: () async {
+                          if (_recording.status ==
+                              RecordingStatus.Initialized) {
+                            await _prepare();
+                            await _startRecording();
+                          }
+                        }),
+                    SizedBox(width: 8.0),
+                    IconButton(
+                        icon: Icon(Icons.stop),
+                        onPressed: () async {
+                          if (_recording.status == RecordingStatus.Recording) {
+                            await _stopRecording();
+                            pickAudio(filepath: _recording.path);
+                            await _prepare();
+                          }
+                        }),
+                    SizedBox(width: 8.0),
+                    GestureDetector(
+                      onTap: () => pickImage(source: ImageSource.gallery),
+                      child: Icon(Icons.attach_file,
+                          size: 30.0, color: Theme.of(context).hintColor),
+                    ),
+                    SizedBox(width: 8.0),
+                    GestureDetector(
+                      onTap: () => pickImage(source: ImageSource.camera),
+                      child: Icon(Icons.camera_alt,
+                          size: 30.0, color: Theme.of(context).hintColor),
+                    ),
+                    SizedBox(width: 8.0),
+                    IconButton(
+                        icon: Icon(Icons.send),
+                        onPressed: () {
+                          sendMessage();
+                          textFieldController.clear();
+                        }),
+                  ],
                 ),
               ),
+            ],
           ),
-          GestureDetector(
-          onTap: () => pickImage(source: ImageSource.gallery),
-          child:Icon(Icons.attach_file,
-                size: 30.0, color: Theme.of(context).hintColor),),
-          SizedBox(width: 8.0),
-          GestureDetector( 
-            onTap: () => pickImage(source: ImageSource.camera),
-            child: Icon(Icons.camera_alt,
-                size: 30.0, color: Theme.of(context).hintColor),),
-
-          SizedBox(width: 8.0),
-          IconButton(icon: Icon(Icons.send), onPressed:(){sendMessage(); textFieldController.clear();}),
-        ],),
-            ), 
-          ],
         ),
       ),
-    ),);
+    );
   }
 }
+
 class ContactDetailsPage extends StatelessWidget {
   ContactDetailsPage(this._contact);
   final Contact _contact;

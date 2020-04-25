@@ -38,4 +38,19 @@ class FirebaseRepository {
     @required ImageUploadProvider imageUploadProvider
   }) =>
       _firebaseMethods.uploadImage(image, receiverId, senderId, imageUploadProvider);
+
+  Future<String> uploadAudioToStorage(String audioFile) =>
+      _firebaseMethods.uploadAudioToStorage(audioFile);
+
+  void uploadAudioMsgToDb(String url, String receiverId, String senderId) =>
+      _firebaseMethods.setAudioMsg(url, receiverId, senderId);
+
+  
+   void uploadAudio({
+    @required String audio,
+    @required String receiverId,
+    @required String senderId,
+    @required ImageUploadProvider imageUploadProvider
+  }) =>
+      _firebaseMethods.uploadAudio(audio, receiverId, senderId, imageUploadProvider);
 }
