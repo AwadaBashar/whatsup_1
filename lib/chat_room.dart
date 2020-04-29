@@ -32,7 +32,10 @@ import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
+<<<<<<< HEAD
 import 'package:video_player/video_player.dart';
+=======
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
 
 class ChatRoom extends StatefulWidget {
   String id;
@@ -40,7 +43,10 @@ class ChatRoom extends StatefulWidget {
   String profile;
   Contact c;
   bool onl;
+<<<<<<< HEAD
 
+=======
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
   ChatRoom(String id, String na1, String pro, Contact x, bool userstatu) {
     this.id = id;
     na = na1;
@@ -74,8 +80,11 @@ class _ChatRoomState extends State<ChatRoom> {
   FlutterAudioRecorder _recorder;
   Recording _recording;
   Timer _t;
+<<<<<<< HEAD
   VideoPlayerController playerController;
   VoidCallback listener;
+=======
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
 
   Future _init() async {
     var hasPermission = await FlutterAudioRecorder.hasPermissions;
@@ -227,9 +236,12 @@ class _ChatRoomState extends State<ChatRoom> {
         setseen();
       });
     });
+<<<<<<< HEAD
     listener = () {
       setState(() {});
     };
+=======
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
   }
 
   @override
@@ -322,7 +334,10 @@ class _ChatRoomState extends State<ChatRoom> {
   }
 
   Widget messageList() {
+<<<<<<< HEAD
     //this.initState();
+=======
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
     return StreamBuilder(
       stream: Firestore.instance
           .collection("messages")
@@ -404,6 +419,7 @@ class _ChatRoomState extends State<ChatRoom> {
               fontSize: 16.0,
             ),
           )
+<<<<<<< HEAD
         : (message.type == "image")
             ? (message.photoUrl != null
                 ? CachedImage(
@@ -489,6 +505,19 @@ class _ChatRoomState extends State<ChatRoom> {
                               })
                         ],
                       );
+=======
+        :(message.type=="image")?( message.photoUrl != null
+            ? CachedImage(
+                message.photoUrl,
+                height: 250,
+                width: 250,
+                radius: 10,
+              )
+            : Text("Url was null")):IconButton(icon: Icon(Icons.play_arrow), onPressed: (){
+              AudioPlayer b=new AudioPlayer();
+              b.play(message.path,isLocal: false);
+            });
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
   }
 
   getMessage1(Message message, seen2) {
@@ -500,6 +529,7 @@ class _ChatRoomState extends State<ChatRoom> {
               fontSize: 16.0,
             ),
           )
+<<<<<<< HEAD
         : (message.type == "image")
             ? (message.photoUrl != null
                 ? CachedImage(
@@ -585,6 +615,19 @@ class _ChatRoomState extends State<ChatRoom> {
                               })
                         ],
                       );
+=======
+        : (message.type=="image")?( message.photoUrl != null
+            ? CachedImage(
+                message.photoUrl,
+                height: 250,
+                width: 250,
+                radius: 10,
+              )
+            : Text("Url was null")):IconButton(icon: Icon(Icons.play_arrow), onPressed: (){
+              AudioPlayer b=new AudioPlayer();
+              b.play(message.path,isLocal: false);
+            });
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
   }
 
   void pickImage({@required ImageSource source}) async {
@@ -596,6 +639,7 @@ class _ChatRoomState extends State<ChatRoom> {
         imageUploadProvider: _imageUploadProvider);
   }
 
+<<<<<<< HEAD
   void pickVideo({@required ImageSource source}) async {
     io.File selectedImage = await ImagePicker.pickVideo(source: source);
     _repository.uploadVideo(
@@ -605,6 +649,8 @@ class _ChatRoomState extends State<ChatRoom> {
         imageUploadProvider: _imageUploadProvider);
   }
 
+=======
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
   void pickAudio({@required String filepath}) async {
     String selectedImage = filepath;
     _repository.uploadAudio(
@@ -614,6 +660,7 @@ class _ChatRoomState extends State<ChatRoom> {
         imageUploadProvider: _imageUploadProvider);
   }
 
+<<<<<<< HEAD
   void pickDocument({@required String filepath}) async {
     String selectedImage = filepath;
     _repository.uploadDoc(
@@ -623,6 +670,8 @@ class _ChatRoomState extends State<ChatRoom> {
         imageUploadProvider: _imageUploadProvider);
   }
 
+=======
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
   Widget receiverLayout(Message message, bool seen1) {
     Radius messageRadius = Radius.circular(10);
 
@@ -768,7 +817,11 @@ class _ChatRoomState extends State<ChatRoom> {
                             await _startRecording();
                           }
                         }),
+<<<<<<< HEAD
                     SizedBox(width: 6.0),
+=======
+                    SizedBox(width: 8.0),
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
                     IconButton(
                         icon: Icon(Icons.stop),
                         onPressed: () async {
@@ -778,6 +831,7 @@ class _ChatRoomState extends State<ChatRoom> {
                             await _prepare();
                           }
                         }),
+<<<<<<< HEAD
                     SizedBox(width: 6.0),
                     PopupMenuButton(
                       itemBuilder: (context) {
@@ -913,6 +967,15 @@ class _ChatRoomState extends State<ChatRoom> {
                     //       size: 30.0, color: Theme.of(context).hintColor),
                     // ),
                     SizedBox(width: 6.0),
+=======
+                    SizedBox(width: 8.0),
+                    GestureDetector(
+                      onTap: () => pickImage(source: ImageSource.gallery),
+                      child: Icon(Icons.attach_file,
+                          size: 30.0, color: Theme.of(context).hintColor),
+                    ),
+                    SizedBox(width: 8.0),
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
                     GestureDetector(
                       onTap: () => pickImage(source: ImageSource.camera),
                       child: Icon(Icons.camera_alt,

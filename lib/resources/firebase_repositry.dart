@@ -39,6 +39,7 @@ class FirebaseRepository {
   }) =>
       _firebaseMethods.uploadImage(image, receiverId, senderId, imageUploadProvider);
 
+<<<<<<< HEAD
   Future<String> uploadVideoToStorage(File videoFile) =>
       _firebaseMethods.uploadVideoToStorage(videoFile);
 
@@ -54,6 +55,8 @@ class FirebaseRepository {
   }) =>
       _firebaseMethods.uploadVideo(video, receiverId, senderId, imageUploadProvider);
 
+=======
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
   Future<String> uploadAudioToStorage(String audioFile) =>
       _firebaseMethods.uploadAudioToStorage(audioFile);
 
@@ -68,6 +71,7 @@ class FirebaseRepository {
     @required ImageUploadProvider imageUploadProvider
   }) =>
       _firebaseMethods.uploadAudio(audio, receiverId, senderId, imageUploadProvider);
+<<<<<<< HEAD
 
   Future<String> uploadDocToStorage(String docFile) =>
       _firebaseMethods.uploadDocToStorage(docFile);
@@ -83,4 +87,6 @@ class FirebaseRepository {
     @required ImageUploadProvider imageUploadProvider
   }) =>
       _firebaseMethods.uploadDoc(audio, receiverId, senderId, imageUploadProvider);
+=======
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
 }

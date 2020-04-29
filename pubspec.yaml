@@ -43,9 +43,12 @@ dependencies:
   flutter_audio_recorder: ^0.5.1
   audioplayer: ^0.5.1
   audio: ^0.0.5
+<<<<<<< HEAD
   video_player:
   file_picker:
   flutter_downloader:
+=======
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
 
 dev_dependencies:
   flutter_test:

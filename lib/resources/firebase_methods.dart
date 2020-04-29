@@ -110,6 +110,7 @@ class FirebaseMethods {
         .collection(message.receiverId)
         .add(map);
 
+<<<<<<< HEAD
     await Firestore()
         .collection("messages")
         .document(message.receiverId)
@@ -138,6 +139,8 @@ class FirebaseMethods {
         .collection(message.receiverId)
         .add(map);
 
+=======
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
     await Firestore()
         .collection("messages")
         .document(message.receiverId)
@@ -159,6 +162,7 @@ class FirebaseMethods {
     setImageMsg(url, receiverId, senderId);
   }
 
+<<<<<<< HEAD
   void uploadVideo(File video, String receiverId, String senderId,
       ImageUploadProvider imageUploadProvider) async {
     // Set some loading value to db and show it to user
@@ -173,6 +177,8 @@ class FirebaseMethods {
     setVideoMsg(url, receiverId, senderId);
   }
 
+=======
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
   Future<String> uploadAudioToStorage(String audioFile) async {
     try {
       _storageReference = FirebaseStorage.instance
@@ -188,6 +194,7 @@ class FirebaseMethods {
     }
   }
 
+<<<<<<< HEAD
   Future<String> uploadDocToStorage(String docFile) async {
     try {
       _storageReference = FirebaseStorage.instance
@@ -203,6 +210,8 @@ class FirebaseMethods {
     }
   }
 
+=======
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
   void setAudioMsg(String url, String receiverId, String senderId) async {
     Message message;
 
@@ -231,6 +240,7 @@ class FirebaseMethods {
         .add(map);
   }
 
+<<<<<<< HEAD
   void setDocMsg(String url, String receiverId, String senderId) async {
     Message message;
 
@@ -259,6 +269,8 @@ class FirebaseMethods {
         .add(map);
   }
 
+=======
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
   void uploadAudio(String audio, String receiverId, String senderId,
       ImageUploadProvider imageUploadProvider) async {
     // Set some loading value to db and show it to user
@@ -273,6 +285,7 @@ class FirebaseMethods {
     setAudioMsg(url, receiverId, senderId);
   }
 
+<<<<<<< HEAD
   void uploadDoc(String doc, String receiverId, String senderId,
       ImageUploadProvider imageUploadProvider) async {
     // Set some loading value to db and show it to user
@@ -287,6 +300,8 @@ class FirebaseMethods {
     setDocMsg(url, receiverId, senderId);
   }
 
+=======
+>>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
   Future<User> getUserDetails() async {
     FirebaseUser currentUser = await getCurrentUser();
 
