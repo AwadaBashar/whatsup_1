@@ -5,10 +5,11 @@ import 'dart:io' as io;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:flutter/material.dart';
+//import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+//import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:emoji_picker/emoji_picker.dart';
 import 'package:image_picker/image_picker.dart';
@@ -26,16 +27,10 @@ import 'package:audioplayer/audioplayer.dart';
 import 'package:whatsup_1/provider/image_upload_provider.dart';
 import 'package:whatsup_1/enum/view_state.dart';
 import 'package:whatsup_1/widgets/cached_image.dart';
-import 'package:whatsup_1/utils/call_utilities.dart';
 import 'models/user.dart';
-import 'package:file/file.dart';
-import 'package:file/local.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
-<<<<<<< HEAD
 import 'package:video_player/video_player.dart';
-=======
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
 
 class ChatRoom extends StatefulWidget {
   String id;
@@ -43,10 +38,6 @@ class ChatRoom extends StatefulWidget {
   String profile;
   Contact c;
   bool onl;
-<<<<<<< HEAD
-
-=======
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
   ChatRoom(String id, String na1, String pro, Contact x, bool userstatu) {
     this.id = id;
     na = na1;
@@ -80,11 +71,8 @@ class _ChatRoomState extends State<ChatRoom> {
   FlutterAudioRecorder _recorder;
   Recording _recording;
   Timer _t;
-<<<<<<< HEAD
   VideoPlayerController playerController;
   VoidCallback listener;
-=======
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
 
   Future _init() async {
     var hasPermission = await FlutterAudioRecorder.hasPermissions;
@@ -236,12 +224,9 @@ class _ChatRoomState extends State<ChatRoom> {
         setseen();
       });
     });
-<<<<<<< HEAD
     listener = () {
       setState(() {});
     };
-=======
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
   }
 
   @override
@@ -264,10 +249,11 @@ class _ChatRoomState extends State<ChatRoom> {
 
   @override
   void deactivate() {
-    if(playerController!=null)
-    {playerController.setVolume(0.0);
-    playerController.removeListener(listener);
-    super.deactivate();}
+    if (playerController != null) {
+      playerController.setVolume(0.0);
+      playerController.removeListener(listener);
+      super.deactivate();
+    }
   }
 
   showEmojiContainer() {
@@ -334,10 +320,7 @@ class _ChatRoomState extends State<ChatRoom> {
   }
 
   Widget messageList() {
-<<<<<<< HEAD
     //this.initState();
-=======
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
     return StreamBuilder(
       stream: Firestore.instance
           .collection("messages")
@@ -419,7 +402,6 @@ class _ChatRoomState extends State<ChatRoom> {
               fontSize: 16.0,
             ),
           )
-<<<<<<< HEAD
         : (message.type == "image")
             ? (message.photoUrl != null
                 ? CachedImage(
@@ -429,95 +411,102 @@ class _ChatRoomState extends State<ChatRoom> {
                     radius: 10,
                   )
                 : Text("Url was null"))
-            : (message.type == "document")
+            : (message.type == "music")
                 ? (message.docPath != null
                     ? Text(
                         message.message,
                         style: TextStyle(
-                          color: Colors.white,
                           fontSize: 16.0,
                         ),
                       )
                     : Text("URL was null"))
-                : (message.type == "video")
-                    ? (message.videoUrl != null
-                        ? AspectRatio(
-                            aspectRatio: 16 / 9,
-                            child: Container(
-                              child: (playerController != null)
-                                  ? VideoPlayer(playerController)
-                                  : Container(
-                                      child: Column(
-                                        children: <Widget>[
-                                          Container(),
-                                          FloatingActionButton(
-                                              onPressed: () {
-                                                void createVideo(String x) {
-                                                  if (playerController ==
-                                                      null) {
-                                                    playerController =
-                                                        VideoPlayerController
-                                                            .network(x)
-                                                          ..addListener(
-                                                              listener)
-                                                          ..setVolume(1.0)
-                                                          ..initialize()
-                                                          ..play();
-                                                  } else {
-                                                    if (playerController
-                                                        .value.isPlaying) {
-                                                      playerController.pause();
-                                                    } else {
-                                                      playerController
-                                                          .initialize();
-                                                      playerController.play();
-                                                    }
-                                                  }
-                                                }
-
-                                                createVideo(message.videoUrl);
-                                                playerController.play();
-                                              },
-                                              child: Icon(Icons.play_arrow))
-                                        ],
-                                      ),
-                                    ),
-                            ),
+                : (message.type == "document")
+                    ? (message.docPath != null
+                        ? Column(
+                            children: <Widget>[
+                              Text(
+                                "Press here to download",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16.0,
+                                ),
+                              ),
+                              IconButton(
+                                  icon: Icon(Icons.file_download),
+                                  onPressed: null)
+                            ],
                           )
-                        : Text("Url was null"))
-                    : Row(
-                        //mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          CircleAvatar(backgroundImage: NetworkImage(profile)),
-                          IconButton(
-                              tooltip: "press to play audio",
-                              icon: Icon(Icons.play_arrow),
-                              onPressed: () {
-                                AudioPlayer b = new AudioPlayer();
-                                b.play(message.path, isLocal: false);
-                              }),
-                          IconButton(
-                              tooltip: "press to stop audio",
-                              icon: Icon(Icons.pause),
-                              onPressed: () {
-                                AudioPlayer b = new AudioPlayer();
-                                b.pause();
-                              })
-                        ],
-                      );
-=======
-        :(message.type=="image")?( message.photoUrl != null
-            ? CachedImage(
-                message.photoUrl,
-                height: 250,
-                width: 250,
-                radius: 10,
-              )
-            : Text("Url was null")):IconButton(icon: Icon(Icons.play_arrow), onPressed: (){
-              AudioPlayer b=new AudioPlayer();
-              b.play(message.path,isLocal: false);
-            });
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
+                        : Text("URL was null"))
+                    : (message.type == "video")
+                        ? (message.videoUrl != null
+                            ? AspectRatio(
+                                aspectRatio: 16 / 9,
+                                child: Container(
+                                  child: (playerController != null)
+                                      ? VideoPlayer(playerController)
+                                      : Container(
+                                          child: Column(
+                                            children: <Widget>[
+                                              Container(),
+                                              FloatingActionButton(
+                                                  onPressed: () {
+                                                    void createVideo(String x) {
+                                                      if (playerController ==
+                                                          null) {
+                                                        playerController =
+                                                            VideoPlayerController
+                                                                .network(x)
+                                                              ..addListener(
+                                                                  listener)
+                                                              ..setVolume(1.0)
+                                                              ..initialize()
+                                                              ..play();
+                                                      } else {
+                                                        if (playerController
+                                                            .value.isPlaying) {
+                                                          playerController
+                                                              .pause();
+                                                        } else {
+                                                          playerController
+                                                              .initialize();
+                                                          playerController
+                                                              .play();
+                                                        }
+                                                      }
+                                                    }
+
+                                                    createVideo(
+                                                        message.videoUrl);
+                                                    playerController.play();
+                                                  },
+                                                  child: Icon(Icons.play_arrow))
+                                            ],
+                                          ),
+                                        ),
+                                ),
+                              )
+                            : Text("Url was null"))
+                        : Row(
+                            //mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              CircleAvatar(
+                                  backgroundImage: NetworkImage(profile)),
+                              IconButton(
+                                  tooltip: "press to play audio",
+                                  icon: Icon(Icons.play_arrow),
+                                  onPressed: () {
+                                    AudioPlayer b = new AudioPlayer();
+                                    b.play(message.path, isLocal: false);
+                                  }),
+                              IconButton(
+                                  tooltip: "press to stop audio",
+                                  icon: Icon(Icons.pause),
+                                  onPressed: () {
+                                    AudioPlayer b = new AudioPlayer();
+                                    b.pause();
+                                  })
+                            ],
+                          );
   }
 
   getMessage1(Message message, seen2) {
@@ -529,7 +518,6 @@ class _ChatRoomState extends State<ChatRoom> {
               fontSize: 16.0,
             ),
           )
-<<<<<<< HEAD
         : (message.type == "image")
             ? (message.photoUrl != null
                 ? CachedImage(
@@ -539,95 +527,101 @@ class _ChatRoomState extends State<ChatRoom> {
                     radius: 10,
                   )
                 : Text("Url was null"))
-                : (message.type == "document")
+            : (message.type == "document")
                 ? (message.docPath != null
-                    ? Text(
-                        message.message,
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16.0,
-                        ),
+                    ? Column(
+                        children: <Widget>[
+                          Text(
+                            "Press here to download",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16.0,
+                            ),
+                          ),
+                          IconButton(
+                              icon: Icon(Icons.file_download), onPressed: null)
+                        ],
                       )
                     : Text("URL was null"))
-                : (message.type == "video")
-                    ? (message.videoUrl != null
-                        ? AspectRatio(
-                            aspectRatio: 16 / 9,
-                            child: Container(
-                              child: (playerController != null)
-                                  ? VideoPlayer(playerController)
-                                  : Container(
-                                      child: Column(
-                                        children: <Widget>[
-                                          Container(),
-                                          FloatingActionButton(
-                                              onPressed: () {
-                                                void createVideo(String x) {
-                                                  if (playerController ==
-                                                      null) {
-                                                    playerController =
-                                                        VideoPlayerController
-                                                            .network(x)
-                                                          ..addListener(
-                                                              listener)
-                                                          ..setVolume(1.0)
-                                                          ..initialize()
-                                                          ..play();
-                                                  } else {
-                                                    if (playerController
-                                                        .value.isPlaying) {
-                                                      playerController.pause();
-                                                    } else {
-                                                      playerController
-                                                          .initialize();
-                                                      playerController.play();
-                                                    }
-                                                  }
-                                                }
-
-                                                createVideo(message.videoUrl);
-                                                playerController.play();
-                                              },
-                                              child: Icon(Icons.play_arrow))
-                                        ],
-                                      ),
-                                    ),
+                : (message.type == "music")
+                    ? (message.docPath != null
+                        ? Text(
+                            message.message,
+                            style: TextStyle(
+                              fontSize: 16.0,
                             ),
                           )
-                        : Text("Url was null"))
-                    : Row(
-                        //mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          CircleAvatar(backgroundImage: NetworkImage(profile)),
-                          IconButton(
-                              tooltip: "press to play audio",
-                              icon: Icon(Icons.play_arrow),
-                              onPressed: () {
-                                AudioPlayer b = new AudioPlayer();
-                                b.play(message.path, isLocal: false);
-                              }),
-                          IconButton(
-                              tooltip: "press to stop audio",
-                              icon: Icon(Icons.pause),
-                              onPressed: () {
-                                AudioPlayer b = new AudioPlayer();
-                                b.pause();
-                              })
-                        ],
-                      );
-=======
-        : (message.type=="image")?( message.photoUrl != null
-            ? CachedImage(
-                message.photoUrl,
-                height: 250,
-                width: 250,
-                radius: 10,
-              )
-            : Text("Url was null")):IconButton(icon: Icon(Icons.play_arrow), onPressed: (){
-              AudioPlayer b=new AudioPlayer();
-              b.play(message.path,isLocal: false);
-            });
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
+                        : Text("URL was null"))
+                    : (message.type == "video")
+                        ? (message.videoUrl != null
+                            ? AspectRatio(
+                                aspectRatio: 16 / 9,
+                                child: Container(
+                                  child: (playerController != null)
+                                      ? VideoPlayer(playerController)
+                                      : Container(
+                                          child: Column(
+                                            children: <Widget>[
+                                              Container(),
+                                              FloatingActionButton(
+                                                  onPressed: () {
+                                                    void createVideo(String x) {
+                                                      if (playerController ==
+                                                          null) {
+                                                        playerController =
+                                                            VideoPlayerController
+                                                                .network(x)
+                                                              ..addListener(
+                                                                  listener)
+                                                              ..setVolume(1.0)
+                                                              ..initialize()
+                                                              ..play();
+                                                      } else {
+                                                        if (playerController
+                                                            .value.isPlaying) {
+                                                          playerController
+                                                              .pause();
+                                                        } else {
+                                                          playerController
+                                                              .initialize();
+                                                          playerController
+                                                              .play();
+                                                        }
+                                                      }
+                                                    }
+
+                                                    createVideo(
+                                                        message.videoUrl);
+                                                    playerController.play();
+                                                  },
+                                                  child: Icon(Icons.play_arrow))
+                                            ],
+                                          ),
+                                        ),
+                                ),
+                              )
+                            : Text("Url was null"))
+                        : Row(
+                            //mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              CircleAvatar(
+                                  backgroundImage: NetworkImage(profile)),
+                              IconButton(
+                                  tooltip: "press to play audio",
+                                  icon: Icon(Icons.play_arrow),
+                                  onPressed: () {
+                                    AudioPlayer b = new AudioPlayer();
+                                    b.play(message.path, isLocal: false);
+                                  }),
+                              IconButton(
+                                  tooltip: "press to stop audio",
+                                  icon: Icon(Icons.pause),
+                                  onPressed: () {
+                                    AudioPlayer b = new AudioPlayer();
+                                    b.pause();
+                                  })
+                            ],
+                          );
   }
 
   void pickImage({@required ImageSource source}) async {
@@ -639,7 +633,6 @@ class _ChatRoomState extends State<ChatRoom> {
         imageUploadProvider: _imageUploadProvider);
   }
 
-<<<<<<< HEAD
   void pickVideo({@required ImageSource source}) async {
     io.File selectedImage = await ImagePicker.pickVideo(source: source);
     _repository.uploadVideo(
@@ -649,8 +642,6 @@ class _ChatRoomState extends State<ChatRoom> {
         imageUploadProvider: _imageUploadProvider);
   }
 
-=======
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
   void pickAudio({@required String filepath}) async {
     String selectedImage = filepath;
     _repository.uploadAudio(
@@ -660,7 +651,6 @@ class _ChatRoomState extends State<ChatRoom> {
         imageUploadProvider: _imageUploadProvider);
   }
 
-<<<<<<< HEAD
   void pickDocument({@required String filepath}) async {
     String selectedImage = filepath;
     _repository.uploadDoc(
@@ -670,8 +660,15 @@ class _ChatRoomState extends State<ChatRoom> {
         imageUploadProvider: _imageUploadProvider);
   }
 
-=======
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
+  void pickMusic({@required String filepath}) async {
+    String selectedImage = filepath;
+    _repository.uploadMusic(
+        audio: selectedImage,
+        receiverId: recid,
+        senderId: myid,
+        imageUploadProvider: _imageUploadProvider);
+  }
+
   Widget receiverLayout(Message message, bool seen1) {
     Radius messageRadius = Radius.circular(10);
 
@@ -817,11 +814,7 @@ class _ChatRoomState extends State<ChatRoom> {
                             await _startRecording();
                           }
                         }),
-<<<<<<< HEAD
                     SizedBox(width: 6.0),
-=======
-                    SizedBox(width: 8.0),
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
                     IconButton(
                         icon: Icon(Icons.stop),
                         onPressed: () async {
@@ -831,7 +824,6 @@ class _ChatRoomState extends State<ChatRoom> {
                             await _prepare();
                           }
                         }),
-<<<<<<< HEAD
                     SizedBox(width: 6.0),
                     PopupMenuButton(
                       itemBuilder: (context) {
@@ -930,7 +922,7 @@ class _ChatRoomState extends State<ChatRoom> {
                             try {
                               String x = await FilePicker.getFilePath(
                                   type: FileType.custom,
-                                  allowedExtensions: ['pdf', 'docx','pptx']);
+                                  allowedExtensions: ['pdf', 'docx', 'pptx']);
                               pickDocument(filepath: x);
                             } on PlatformException catch (e) {
                               print("Unsupported operation" + e.toString());
@@ -939,7 +931,7 @@ class _ChatRoomState extends State<ChatRoom> {
 
                           _getDocuments();
                           //print(docPaths);
-                          
+
                         }
                         if (value == 5) {
                           //String docPaths;
@@ -948,15 +940,21 @@ class _ChatRoomState extends State<ChatRoom> {
                             try {
                               String x = await FilePicker.getFilePath(
                                   type: FileType.custom,
-                                  allowedExtensions: ['mp3', 'm4a','flac','wav','mp4']);
-                              pickDocument(filepath: x);
+                                  allowedExtensions: [
+                                    'mp3',
+                                    'm4a',
+                                    'flac',
+                                    'wav',
+                                    'mp4'
+                                  ]);
+                              pickMusic(filepath: x);
                             } on PlatformException catch (e) {
                               print("Unsupported operation" + e.toString());
                             }
                           }
 
                           _getDocument();
-                          }
+                        }
                       },
                       icon: Icon(Icons.attach_file),
                     ),
@@ -967,15 +965,6 @@ class _ChatRoomState extends State<ChatRoom> {
                     //       size: 30.0, color: Theme.of(context).hintColor),
                     // ),
                     SizedBox(width: 6.0),
-=======
-                    SizedBox(width: 8.0),
-                    GestureDetector(
-                      onTap: () => pickImage(source: ImageSource.gallery),
-                      child: Icon(Icons.attach_file,
-                          size: 30.0, color: Theme.of(context).hintColor),
-                    ),
-                    SizedBox(width: 8.0),
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
                     GestureDetector(
                       onTap: () => pickImage(source: ImageSource.camera),
                       child: Icon(Icons.camera_alt,

@@ -43,16 +43,20 @@ dependencies:
   flutter_audio_recorder: ^0.5.1
   audioplayer: ^0.5.1
   audio: ^0.0.5
-<<<<<<< HEAD
   video_player:
   file_picker:
   flutter_downloader:
-=======
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.7.4
+
+flutter_icons:
+  andriod: true
+  image_path: "images/logoo.png"
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "images/logoo.png"
 
 
 # For information on the generic Dart part of this file, see the

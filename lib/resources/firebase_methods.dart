@@ -1,5 +1,6 @@
+import 'dart:async';
+import 'dart:core';
 import 'dart:io';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 //import 'package:google_sign_in/google_sign_in.dart';
@@ -110,7 +111,6 @@ class FirebaseMethods {
         .collection(message.receiverId)
         .add(map);
 
-<<<<<<< HEAD
     await Firestore()
         .collection("messages")
         .document(message.receiverId)
@@ -139,8 +139,6 @@ class FirebaseMethods {
         .collection(message.receiverId)
         .add(map);
 
-=======
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
     await Firestore()
         .collection("messages")
         .document(message.receiverId)
@@ -162,7 +160,6 @@ class FirebaseMethods {
     setImageMsg(url, receiverId, senderId);
   }
 
-<<<<<<< HEAD
   void uploadVideo(File video, String receiverId, String senderId,
       ImageUploadProvider imageUploadProvider) async {
     // Set some loading value to db and show it to user
@@ -177,8 +174,6 @@ class FirebaseMethods {
     setVideoMsg(url, receiverId, senderId);
   }
 
-=======
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
   Future<String> uploadAudioToStorage(String audioFile) async {
     try {
       _storageReference = FirebaseStorage.instance
@@ -194,7 +189,6 @@ class FirebaseMethods {
     }
   }
 
-<<<<<<< HEAD
   Future<String> uploadDocToStorage(String docFile) async {
     try {
       _storageReference = FirebaseStorage.instance
@@ -210,8 +204,21 @@ class FirebaseMethods {
     }
   }
 
-=======
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
+  Future<String> uploadMusicToStorage(String docFile) async {
+    try {
+      _storageReference = FirebaseStorage.instance
+          .ref()
+          .child('${DateTime.now().millisecondsSinceEpoch}');
+      StorageUploadTask storageUploadTask =
+          _storageReference.putFile(File(docFile));
+      var url = await (await storageUploadTask.onComplete).ref.getDownloadURL();
+      // print(url);
+      return url;
+    } catch (e) {
+      return null;
+    }
+  }
+
   void setAudioMsg(String url, String receiverId, String senderId) async {
     Message message;
 
@@ -240,7 +247,6 @@ class FirebaseMethods {
         .add(map);
   }
 
-<<<<<<< HEAD
   void setDocMsg(String url, String receiverId, String senderId) async {
     Message message;
 
@@ -269,8 +275,34 @@ class FirebaseMethods {
         .add(map);
   }
 
-=======
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
+  void setMusicMsg(String url, String receiverId, String senderId) async {
+    Message message;
+
+    message = Message.docMessage(
+        message: "MUSIC",
+        receiverId: receiverId,
+        senderId: senderId,
+        docPath: url,
+        timestamp: Timestamp.now(),
+        type: 'music');
+
+    // create imagemap
+    var map = message.toMusicMap();
+
+    // var map = Map<String, dynamic>();
+    await Firestore()
+        .collection("messages")
+        .document(message.senderId)
+        .collection(message.receiverId)
+        .add(map);
+
+    await Firestore()
+        .collection("messages")
+        .document(message.receiverId)
+        .collection(message.senderId)
+        .add(map);
+  }
+
   void uploadAudio(String audio, String receiverId, String senderId,
       ImageUploadProvider imageUploadProvider) async {
     // Set some loading value to db and show it to user
@@ -285,7 +317,6 @@ class FirebaseMethods {
     setAudioMsg(url, receiverId, senderId);
   }
 
-<<<<<<< HEAD
   void uploadDoc(String doc, String receiverId, String senderId,
       ImageUploadProvider imageUploadProvider) async {
     // Set some loading value to db and show it to user
@@ -300,8 +331,20 @@ class FirebaseMethods {
     setDocMsg(url, receiverId, senderId);
   }
 
-=======
->>>>>>> e633e7e02032d41adafd8ccda7c45a93bc7798d2
+  void uploadMusic(String doc, String receiverId, String senderId,
+      ImageUploadProvider imageUploadProvider) async {
+    // Set some loading value to db and show it to user
+    imageUploadProvider.setToLoading();
+
+    // Get url from the image bucket
+    String url = await uploadMusicToStorage(doc);
+
+    // Hide loading
+    imageUploadProvider.setToIdle();
+
+    setMusicMsg(url, receiverId, senderId);
+  }
+
   Future<User> getUserDetails() async {
     FirebaseUser currentUser = await getCurrentUser();
 
