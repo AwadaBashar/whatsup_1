@@ -2,8 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:math';
 import 'dart:io' as io;
-import 'dart:typed_data';
-import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:file_picker/file_picker.dart';
@@ -463,7 +462,7 @@ class _ChatRoomState extends State<ChatRoom> {
                         ? Column(
                             children: <Widget>[
                               Text(
-                                "Press here to download",
+                                "Press here to download file",
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 16.0,
@@ -471,7 +470,13 @@ class _ChatRoomState extends State<ChatRoom> {
                               ),
                               IconButton(
                                   icon: Icon(Icons.file_download),
-                                  onPressed: null)
+                                  onPressed: () async {
+                                    if (await canLaunch(message.docPath)) {
+                                      await launch(message.docPath);
+                                    } else {
+                                      throw 'Could not launch docPath';
+                                    }
+                                  })
                             ],
                           )
                         : Text("URL was null"))
@@ -556,7 +561,7 @@ class _ChatRoomState extends State<ChatRoom> {
                               )
                             : Text("Url was null"))
                         : (message.type == "audio")
-                            ? (message.docPath != null
+                            ? (message.path != null
                                 ? Row(
                                     //mainAxisSize: MainAxisSize.min,
                                     children: <Widget>[
@@ -607,14 +612,21 @@ class _ChatRoomState extends State<ChatRoom> {
                     ? Column(
                         children: <Widget>[
                           Text(
-                            "Press here to download",
+                            "Press here to download file",
                             style: TextStyle(
                               color: Colors.black,
                               fontSize: 16.0,
                             ),
                           ),
                           IconButton(
-                              icon: Icon(Icons.file_download), onPressed: null)
+                              icon: Icon(Icons.file_download),
+                              onPressed: () async {
+                                if (await canLaunch(message.docPath)) {
+                                  await launch(message.docPath);
+                                } else {
+                                  throw 'Could not launch docPath';
+                                }
+                              })
                         ],
                       )
                     : Text("URL was null"))
