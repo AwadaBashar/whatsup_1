@@ -413,11 +413,27 @@ class _ChatRoomState extends State<ChatRoom> {
                 : Text("Url was null"))
             : (message.type == "music")
                 ? (message.docPath != null
-                    ? Text(
-                        message.message,
-                        style: TextStyle(
-                          fontSize: 16.0,
-                        ),
+                    ? Row(
+                        //mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          CircleAvatar(
+                              backgroundImage: NetworkImage(
+                                  "https://firebasestorage.googleapis.com/v0/b/whatsup-5827e.appspot.com/o/music.jpg?alt=media&token=aa1c7377-6879-4236-856e-d41b167e4842")),
+                          IconButton(
+                              tooltip: "press to play audio",
+                              icon: Icon(Icons.play_arrow),
+                              onPressed: () {
+                                AudioPlayer b = new AudioPlayer();
+                                b.play(message.docPath, isLocal: false);
+                              }),
+                          IconButton(
+                              tooltip: "press to stop audio",
+                              icon: Icon(Icons.pause),
+                              onPressed: () {
+                                AudioPlayer b = new AudioPlayer();
+                                b.pause();
+                              })
+                        ],
                       )
                     : Text("URL was null"))
                 : (message.type == "document")
@@ -545,11 +561,27 @@ class _ChatRoomState extends State<ChatRoom> {
                     : Text("URL was null"))
                 : (message.type == "music")
                     ? (message.docPath != null
-                        ? Text(
-                            message.message,
-                            style: TextStyle(
-                              fontSize: 16.0,
-                            ),
+                        ? Row(
+                            //mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              CircleAvatar(
+                                  backgroundImage: NetworkImage(
+                                      "https://firebasestorage.googleapis.com/v0/b/whatsup-5827e.appspot.com/o/music.jpg?alt=media&token=aa1c7377-6879-4236-856e-d41b167e4842")),
+                              IconButton(
+                                  tooltip: "press to play audio",
+                                  icon: Icon(Icons.play_arrow),
+                                  onPressed: () {
+                                    AudioPlayer b = new AudioPlayer();
+                                    b.play(message.docPath, isLocal: false);
+                                  }),
+                              IconButton(
+                                  tooltip: "press to stop audio",
+                                  icon: Icon(Icons.pause),
+                                  onPressed: () {
+                                    AudioPlayer b = new AudioPlayer();
+                                    b.pause();
+                                  })
+                            ],
                           )
                         : Text("URL was null"))
                     : (message.type == "video")
@@ -605,13 +637,13 @@ class _ChatRoomState extends State<ChatRoom> {
                             //mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
                               CircleAvatar(
-                                  backgroundImage: NetworkImage(profile)),
+                                  backgroundImage: NetworkImage("https://firebasestorage.googleapis.com/v0/b/whatsup-5827e.appspot.com/o/music.jpg?alt=media&token=aa1c7377-6879-4236-856e-d41b167e4842")),
                               IconButton(
                                   tooltip: "press to play audio",
                                   icon: Icon(Icons.play_arrow),
                                   onPressed: () {
                                     AudioPlayer b = new AudioPlayer();
-                                    b.play(message.path, isLocal: false);
+                                    b.play(message.docPath, isLocal: false);
                                   }),
                               IconButton(
                                   tooltip: "press to stop audio",
