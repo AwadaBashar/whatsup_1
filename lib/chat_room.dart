@@ -206,6 +206,7 @@ class _ChatRoomState extends State<ChatRoom> {
     const one = const Duration(seconds: 60);
     getdata().then((results) {
       setState(() {
+        
         users = results;
         usermap1 = createmap3();
         usermap2 = createmap4();
@@ -214,6 +215,7 @@ class _ChatRoomState extends State<ChatRoom> {
           sender = User(myid);
 
           receiver = User(recid);
+        ids=await get2();
         }
 
         create();
@@ -413,7 +415,17 @@ class _ChatRoomState extends State<ChatRoom> {
       }
     }
   }
+get2()async{
+HashMap<String,String> ids=new HashMap<String,String>();
+      for (int i = 0; i < users.documents.length; i++) {
+        String fileName=users.documents[i].data['profile'];
+   
+  ids[users.documents[i].data['userid']]=fileName;
 
+        }
+        return ids;
+  }
+  HashMap<String,String> ids=new HashMap<String,String>();
   getMessage(Message message) {
     return message.type == "text"
         ? Text(
@@ -453,7 +465,16 @@ class _ChatRoomState extends State<ChatRoom> {
                               onPressed: () {
                                 AudioPlayer b = new AudioPlayer();
                                 b.pause();
-                              })
+                              }),
+                              IconButton(
+                                  icon: Icon(Icons.file_download),
+                                  onPressed: () async {
+                                    if (await canLaunch(message.docPath)) {
+                                      await launch(message.docPath);
+                                    } else {
+                                      throw 'Could not launch docPath';
+                                    }
+                                  }),
                         ],
                       )
                     : Text("URL was null"))
@@ -651,6 +672,15 @@ class _ChatRoomState extends State<ChatRoom> {
                                   onPressed: () {
                                     AudioPlayer b = new AudioPlayer();
                                     b.pause();
+                                  }),
+                                  IconButton(
+                                  icon: Icon(Icons.file_download),
+                                  onPressed: () async {
+                                    if (await canLaunch(message.docPath)) {
+                                      await launch(message.docPath);
+                                    } else {
+                                      throw 'Could not launch docPath';
+                                    }
                                   })
                             ],
                           )
@@ -742,7 +772,7 @@ class _ChatRoomState extends State<ChatRoom> {
                                     children: <Widget>[
                                       CircleAvatar(
                                           backgroundImage:
-                                              NetworkImage(profile)),
+                                              NetworkImage(ids[myid])),
                                       IconButton(
                                           tooltip: "press to play audio",
                                           icon: Icon(Icons.play_arrow),
