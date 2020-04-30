@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:math';
 import 'dart:io' as io;
+import 'dart:typed_data';
+import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:file_picker/file_picker.dart';
@@ -393,6 +395,26 @@ class _ChatRoomState extends State<ChatRoom> {
     );
   }
 
+  void createVideo(String x) {
+    if (playerController == null) {
+      playerController = VideoPlayerController.network(x)
+        ..addListener(listener)
+        ..setVolume(1.0)
+        ..initialize()
+        ..play();
+    } else {
+      if (playerController.value.isPlaying) {
+        playerController.pause();
+      } else {
+        playerController = VideoPlayerController.network(x)
+          ..addListener(listener)
+          ..setVolume(1.0)
+          ..initialize()
+          ..play();
+      }
+    }
+  }
+
   getMessage(Message message) {
     return message.type == "text"
         ? Text(
@@ -458,71 +480,108 @@ class _ChatRoomState extends State<ChatRoom> {
                             ? AspectRatio(
                                 aspectRatio: 16 / 9,
                                 child: Container(
-                                  child: (playerController != null)
-                                      ? VideoPlayer(playerController)
-                                      : Container(
-                                          child: Column(
-                                            children: <Widget>[
-                                              Container(),
-                                              FloatingActionButton(
-                                                  onPressed: () {
-                                                    void createVideo(String x) {
-                                                      if (playerController ==
-                                                          null) {
-                                                        playerController =
-                                                            VideoPlayerController
-                                                                .network(x)
-                                                              ..addListener(
-                                                                  listener)
-                                                              ..setVolume(1.0)
-                                                              ..initialize()
-                                                              ..play();
-                                                      } else {
-                                                        if (playerController
-                                                            .value.isPlaying) {
-                                                          playerController
-                                                              .pause();
-                                                        } else {
-                                                          playerController
-                                                              .initialize();
-                                                          playerController
-                                                              .play();
-                                                        }
-                                                      }
-                                                    }
-
+                                  child: Container(
+                                    child: Column(
+                                      children: <Widget>[
+                                        FloatingActionButton(
+                                            onPressed: () {
+                                              showDialog(
+                                                  context: context,
+                                                  barrierDismissible: false,
+                                                  builder: (context) {
                                                     createVideo(
                                                         message.videoUrl);
                                                     playerController.play();
-                                                  },
-                                                  child: Icon(Icons.play_arrow))
-                                            ],
-                                          ),
-                                        ),
+                                                    return Column(children: [
+                                                      AlertDialog(
+                                                        title: Text(
+                                                            "Give the code?"),
+                                                        content: Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: <Widget>[
+                                                            Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .spaceEvenly,
+                                                                children: [
+                                                                  FlatButton(
+                                                                      onPressed:
+                                                                          () {
+                                                                        playerController
+                                                                            .pause();
+                                                                      },
+                                                                      child: Icon(
+                                                                          Icons
+                                                                              .pause)),
+                                                                  FlatButton(
+                                                                      onPressed:
+                                                                          () {
+                                                                        playerController
+                                                                            .play();
+                                                                      },
+                                                                      child: Icon(
+                                                                          Icons
+                                                                              .play_arrow)),
+                                                                  Flexible(
+                                                                    child: FlatButton(
+                                                                        onPressed: () {
+                                                                          playerController
+                                                                              .pause();
+                                                                          Navigator
+                                                                              .pop(
+                                                                            context,
+                                                                          );
+                                                                        },
+                                                                        child: Icon(Icons.exit_to_app)),
+                                                                  )
+                                                                ]),
+                                                            AspectRatio(
+                                                                aspectRatio:
+                                                                    16 / 9,
+                                                                child: Container(
+                                                                    child: VideoPlayer(
+                                                                        playerController)))
+                                                          ],
+                                                        ),
+                                                      )
+                                                    ]);
+                                                  });
+                                            },
+                                            child: Icon(Icons.play_arrow))
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               )
                             : Text("Url was null"))
-                        : Row(
-                            //mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              CircleAvatar(
-                                  backgroundImage: NetworkImage(profile)),
-                              IconButton(
-                                  tooltip: "press to play audio",
-                                  icon: Icon(Icons.play_arrow),
-                                  onPressed: () {
-                                    AudioPlayer b = new AudioPlayer();
-                                    b.play(message.path, isLocal: false);
-                                  }),
-                              IconButton(
-                                  tooltip: "press to stop audio",
-                                  icon: Icon(Icons.pause),
-                                  onPressed: () {
-                                    AudioPlayer b = new AudioPlayer();
-                                    b.pause();
-                                  })
-                            ],
-                          );
+                        : (message.type == "audio")
+                            ? (message.docPath != null
+                                ? Row(
+                                    //mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      CircleAvatar(
+                                          backgroundImage:
+                                              NetworkImage(profile)),
+                                      IconButton(
+                                          tooltip: "press to play audio",
+                                          icon: Icon(Icons.play_arrow),
+                                          onPressed: () {
+                                            AudioPlayer b = new AudioPlayer();
+                                            b.play(message.path,
+                                                isLocal: false);
+                                          }),
+                                      IconButton(
+                                          tooltip: "press to stop audio",
+                                          icon: Icon(Icons.pause),
+                                          onPressed: () {
+                                            AudioPlayer b = new AudioPlayer();
+                                            b.pause();
+                                          })
+                                    ],
+                                  )
+                                : Text("URL Null"))
+                            : Text("Not of type");
   }
 
   getMessage1(Message message, seen2) {
@@ -589,71 +648,108 @@ class _ChatRoomState extends State<ChatRoom> {
                             ? AspectRatio(
                                 aspectRatio: 16 / 9,
                                 child: Container(
-                                  child: (playerController != null)
-                                      ? VideoPlayer(playerController)
-                                      : Container(
-                                          child: Column(
-                                            children: <Widget>[
-                                              Container(),
-                                              FloatingActionButton(
-                                                  onPressed: () {
-                                                    void createVideo(String x) {
-                                                      if (playerController ==
-                                                          null) {
-                                                        playerController =
-                                                            VideoPlayerController
-                                                                .network(x)
-                                                              ..addListener(
-                                                                  listener)
-                                                              ..setVolume(1.0)
-                                                              ..initialize()
-                                                              ..play();
-                                                      } else {
-                                                        if (playerController
-                                                            .value.isPlaying) {
-                                                          playerController
-                                                              .pause();
-                                                        } else {
-                                                          playerController
-                                                              .initialize();
-                                                          playerController
-                                                              .play();
-                                                        }
-                                                      }
-                                                    }
-
+                                  child: Container(
+                                    child: Column(
+                                      children: <Widget>[
+                                        FloatingActionButton(
+                                            onPressed: () {
+                                              showDialog(
+                                                  context: context,
+                                                  barrierDismissible: false,
+                                                  builder: (context) {
                                                     createVideo(
                                                         message.videoUrl);
                                                     playerController.play();
-                                                  },
-                                                  child: Icon(Icons.play_arrow))
-                                            ],
-                                          ),
-                                        ),
+                                                    return Column(children: [
+                                                      AlertDialog(
+                                                        title: Text(
+                                                            "Give the code?"),
+                                                        content: Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: <Widget>[
+                                                            Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .spaceEvenly,
+                                                                children: [
+                                                                  FlatButton(
+                                                                      onPressed:
+                                                                          () {
+                                                                        playerController
+                                                                            .pause();
+                                                                      },
+                                                                      child: Icon(
+                                                                          Icons
+                                                                              .pause)),
+                                                                  FlatButton(
+                                                                      onPressed:
+                                                                          () {
+                                                                        playerController
+                                                                            .play();
+                                                                      },
+                                                                      child: Icon(
+                                                                          Icons
+                                                                              .play_arrow)),
+                                                                  Flexible(
+                                                                    child: FlatButton(
+                                                                        onPressed: () {
+                                                                          playerController
+                                                                              .pause();
+                                                                          Navigator
+                                                                              .pop(
+                                                                            context,
+                                                                          );
+                                                                        },
+                                                                        child: Icon(Icons.exit_to_app)),
+                                                                  )
+                                                                ]),
+                                                            AspectRatio(
+                                                                aspectRatio:
+                                                                    16 / 9,
+                                                                child: Container(
+                                                                    child: VideoPlayer(
+                                                                        playerController)))
+                                                          ],
+                                                        ),
+                                                      )
+                                                    ]);
+                                                  });
+                                            },
+                                            child: Icon(Icons.play_arrow))
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               )
                             : Text("Url was null"))
-                        : Row(
-                            //mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              CircleAvatar(
-                                  backgroundImage: NetworkImage("https://firebasestorage.googleapis.com/v0/b/whatsup-5827e.appspot.com/o/music.jpg?alt=media&token=aa1c7377-6879-4236-856e-d41b167e4842")),
-                              IconButton(
-                                  tooltip: "press to play audio",
-                                  icon: Icon(Icons.play_arrow),
-                                  onPressed: () {
-                                    AudioPlayer b = new AudioPlayer();
-                                    b.play(message.docPath, isLocal: false);
-                                  }),
-                              IconButton(
-                                  tooltip: "press to stop audio",
-                                  icon: Icon(Icons.pause),
-                                  onPressed: () {
-                                    AudioPlayer b = new AudioPlayer();
-                                    b.pause();
-                                  })
-                            ],
-                          );
+                        : (message.type == "audio")
+                            ? (message.path != null
+                                ? Row(
+                                    //mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      CircleAvatar(
+                                          backgroundImage:
+                                              NetworkImage(profile)),
+                                      IconButton(
+                                          tooltip: "press to play audio",
+                                          icon: Icon(Icons.play_arrow),
+                                          onPressed: () {
+                                            AudioPlayer b = new AudioPlayer();
+                                            b.play(message.path,
+                                                isLocal: false);
+                                          }),
+                                      IconButton(
+                                          tooltip: "press to stop audio",
+                                          icon: Icon(Icons.pause),
+                                          onPressed: () {
+                                            AudioPlayer b = new AudioPlayer();
+                                            b.pause();
+                                          })
+                                    ],
+                                  )
+                                : Text("URL Null"))
+                            : Text("Not of type");
   }
 
   void pickImage({@required ImageSource source}) async {
@@ -788,7 +884,13 @@ class _ChatRoomState extends State<ChatRoom> {
                         ? dial(context: context)
                         : {},
               ),
-              IconButton(icon: Icon(Icons.more_vert), onPressed: () {}),
+              IconButton(
+                  icon: Icon(Icons.refresh),
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (BuildContext context) => ChatRoom(
+                            recid, name, online, c, profile == "online")));
+                  }),
             ],
           ),
           body: Column(
@@ -962,8 +1064,6 @@ class _ChatRoomState extends State<ChatRoom> {
                           }
 
                           _getDocuments();
-                          //print(docPaths);
-
                         }
                         if (value == 5) {
                           //String docPaths;
