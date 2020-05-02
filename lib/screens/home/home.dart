@@ -4,6 +4,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
+import 'package:whatsup_1/screens/SignIn.dart';
 import 'package:whatsup_1/services/auth.dart';
 import '../../chat_list.dart';
 import 'package:camera/camera.dart';
@@ -64,6 +65,7 @@ class _HomeState extends State<Home> {
           // top app bar
           appBar: AppBar(
             title: Text('Whatsup'),
+            automaticallyImplyLeading: false,
             actions: <Widget>[
               IconButton(icon: Icon(Icons.search), onPressed: () {}),
               // IconButton(icon: Icon(Icons.more_vert), onPressed: () {}),
@@ -79,8 +81,12 @@ class _HomeState extends State<Home> {
                         )
                       ],
                   onSelected: (value) async {
+                    final FirebaseUser user = await FirebaseAuth.instance.currentUser();
                     if (value == 'signout') {
-                      await _auth.signOut();
+                      await FirebaseAuth.instance.signOut();
+                      Navigator.pop(context);
+                      //Navigator.push(context,
+                                //MaterialPageRoute(builder: (context) => LoginScreen()));
                     }
                     else if (value=='Add profile and status')
                     {
