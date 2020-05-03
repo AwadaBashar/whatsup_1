@@ -15,8 +15,8 @@ import 'package:path/path.dart';
 class MyApp extends StatefulWidget {
   @override
   var userProfileUrl;
-  MyApp(String x) {
-    userProfileUrl = x;
+  MyApp() {
+    userProfileUrl = "";
   }
   _ProfileState createState() => _ProfileState(userProfileUrl);
 }
@@ -235,9 +235,7 @@ class _ProfileState extends State<MyApp> {
                                   child: (_image != null)
                                       ? Image.file(_image, fit: BoxFit.fill)
                                       : Image.network(
-                                          (url != null)
-                                              ? url
-                                              : "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=600&q=60",
+                                           "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=600&q=60",
                                           fit: BoxFit.fill,
                                         ),
                                 ),

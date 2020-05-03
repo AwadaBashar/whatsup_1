@@ -90,9 +90,9 @@ class _HomeState extends State<Home> {
                     }
                     else if (value=='Add profile and status')
                     {
-                      await geturl();
+                      //await geturl();
                       Navigator.push(context,
-                                MaterialPageRoute(builder: (context) => MyApp(url)));
+                                MaterialPageRoute(builder: (context) => MyApp()));
                     }
                   })
             ],
@@ -114,9 +114,9 @@ class _HomeState extends State<Home> {
           ),
           floatingActionButton:FloatingActionButton(
           onPressed: () async{
-            await geturl();
+            //await geturl();
             Navigator.of(context).push(MaterialPageRoute(
-                          builder: (BuildContext context) =>AllContacts(url)));
+                          builder: (BuildContext context) =>AllContacts()));
           },
           child: Icon(Icons.message),
           backgroundColor: Colors.green,

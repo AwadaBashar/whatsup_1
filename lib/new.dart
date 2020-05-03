@@ -16,9 +16,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/services.dart';
 class AllContacts extends StatefulWidget {
   String x;
-  AllContacts(String url)
+  AllContacts()
   {
-    x=url;
+    x="";
   }
 
 
