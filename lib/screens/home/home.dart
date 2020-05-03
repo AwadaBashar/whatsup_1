@@ -85,8 +85,8 @@ class _HomeState extends State<Home> {
                     if (value == 'signout') {
                       await FirebaseAuth.instance.signOut();
                       Navigator.pop(context);
-                      //Navigator.push(context,
-                                //MaterialPageRoute(builder: (context) => LoginScreen()));
+                      Navigator.push(context,
+                                MaterialPageRoute(builder: (context) => LoginScreen()));
                     }
                     else if (value=='Add profile and status')
                     {

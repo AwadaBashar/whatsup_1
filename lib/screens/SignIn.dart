@@ -22,6 +22,43 @@ class LoginScreen extends StatelessWidget {
           FirebaseUser user = result.user;
 
           if (user != null) {
+            QuerySnapshot users =
+                await Firestore.instance.collection('users').getDocuments();
+            bool found = false;
+            for (int i = 0; i < users.documents.length; i++) {
+              if (users.documents[i].data['Phone'] == phone) {
+                found = true;
+                final FirebaseUser user =
+                    await FirebaseAuth.instance.currentUser();
+                Firestore.instance
+                    .collection('users')
+                    .document(user.uid)
+                    .updateData({'online': true}).catchError((e) {
+                  print(e);
+                });
+                break;
+              }
+            }
+            if (FirebaseAuth.instance.currentUser() != null && found != true) {
+              final FirebaseUser user =
+                  await FirebaseAuth.instance.currentUser();
+              Firestore.instance
+                  .collection('users')
+                  .document(user.uid)
+                  .setData({
+                'Phone': phone,
+                'status': "Hey there ,I'm using whatsup",
+                'userid': await user.uid,
+                'talkedwith': [],
+                'username': 'ali',
+                'profile':
+                    "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1000&q=80"
+              }).catchError((e) {
+                print(e);
+              });
+            } else {
+              print('You need to be logged in');
+            }
             Navigator.push(
                 context, MaterialPageRoute(builder: (context) => Home()));
           } else {
@@ -43,6 +80,7 @@ class LoginScreen extends StatelessWidget {
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
+                      Text("Enter pin:"),
                       TextField(
                         controller: _codeController,
                       ),
@@ -65,6 +103,45 @@ class LoginScreen extends StatelessWidget {
                         FirebaseUser user = result.user;
 
                         if (user != null) {
+                          QuerySnapshot users = await Firestore.instance
+                              .collection('users')
+                              .getDocuments();
+                          bool found = false;
+                          for (int i = 0; i < users.documents.length; i++) {
+                            if (users.documents[i].data['Phone'] == phone) {
+                              found = true;
+                              final FirebaseUser user =
+                                  await FirebaseAuth.instance.currentUser();
+                              Firestore.instance
+                                  .collection('users')
+                                  .document(user.uid)
+                                  .updateData({'online': true}).catchError((e) {
+                                print(e);
+                              });
+                              break;
+                            }
+                          }
+                          if (FirebaseAuth.instance.currentUser() != null &&
+                              found != true) {
+                            final FirebaseUser user =
+                                await FirebaseAuth.instance.currentUser();
+                            Firestore.instance
+                                .collection('users')
+                                .document(user.uid)
+                                .setData({
+                              'Phone': phone,
+                              'status': "Hey there ,I'm using whatsup",
+                              'userid': await user.uid,
+                              'talkedwith': [],
+                              'username': 'ali',
+                              'profile':
+                                  "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1000&q=80"
+                            }).catchError((e) {
+                              print(e);
+                            });
+                          } else {
+                            print('You need to be logged in');
+                          }
                           Navigator.push(context,
                               MaterialPageRoute(builder: (context) => Home()));
                         } else {
@@ -143,36 +220,36 @@ class LoginScreen extends StatelessWidget {
                         final phone = _phoneController.text.trim();
 
                         loginUser(phone, context);
-                        bool found = false;
-                        for (int i = 0; i < users.documents.length; i++) {
-                          if (users.documents[i].data['Phone'] == phone) {
-                            found = true;
-                            final FirebaseUser user = await FirebaseAuth.instance.currentUser();
-                               Firestore.instance.collection('users').document(user.uid).updateData({
-                            'online':true
-                          }).catchError((e) {
-                            print(e);
-                          });
-                            break;
-                          }
-                        }
-                        if (FirebaseAuth.instance.currentUser() != null && found!=true) {
-                           final FirebaseUser user = await FirebaseAuth.instance.currentUser();
-                          Firestore.instance.collection('users').document(user.uid).setData({
-                            'Phone': phone,
-                            'status':"Hey there ,I'm using whatsup",
-                            'userid':await user.uid,
-                            'talkedwith':[],
-                            'username':'ali',
-                            'profile':"https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1000&q=80"
-                          }).catchError((e) {
-                            print(e);
-                          });
-                        } else {
+                        // bool found = false;
+                        // for (int i = 0; i < users.documents.length; i++) {
+                        //   if (users.documents[i].data['Phone'] == phone) {
+                        //     found = true;
+                        //     final FirebaseUser user = await FirebaseAuth.instance.currentUser();
+                        //        Firestore.instance.collection('users').document(user.uid).updateData({
+                        //     'online':true
+                        //   }).catchError((e) {
+                        //     print(e);
+                        //   });
+                        //     break;
+                        //   }
+                        // }
+                        // if (FirebaseAuth.instance.currentUser() != null && found!=true) {
+                        //    final FirebaseUser user = await FirebaseAuth.instance.currentUser();
+                        //   Firestore.instance.collection('users').document(user.uid).setData({
+                        //     'Phone': phone,
+                        //     'status':"Hey there ,I'm using whatsup",
+                        //     'userid':await user.uid,
+                        //     'talkedwith':[],
+                        //     'username':'ali',
+                        //     'profile':"https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1000&q=80"
+                        //   }).catchError((e) {
+                        //     print(e);
+                        //   });
+                        // } else {
 
-                          print('You need to be logged in');
-                        }
-                        
+                        //   print('You need to be logged in');
+                        // }
+
                         Navigator.pop(context);
                       },
                       color: Color(0xff075e54),
